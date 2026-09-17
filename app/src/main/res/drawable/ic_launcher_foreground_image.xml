@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Ajustamos el recurso ic_app_icon_content con gravity center y un tamaño de 66dp
+      para asegurar que resida dentro de la zona segura ("safe zone") y evitar el recorte.
+    -->
+    <item
+        android:drawable="@drawable/ic_app_icon_content"
+        android:width="66dp"
+        android:height="66dp"
+        android:gravity="center" />
+</layer-list>
