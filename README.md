@@ -87,6 +87,8 @@ El dashboard actúa como tu centro de mando:
 *   **Icono de Campana**: En la barra superior, una campana con un contador rojo te indica cuántas tareas requieren tu atención.
 *   **Tarjetas de Alerta**: Cada recordatorio próximo muestra exactamente qué condición está por cumplirse (*"Faltan 200 km"* o *"Vencido hace 2 días"*).
 
-### 3. Historial y Edición
-Puedes navegar por el historial de cualquier vehículo para revisar gastos pasados. Si olvidaste programar un recordatorio en un registro antiguo, simplemente edítalo y añade la frecuencia de mantenimiento deseada de forma segura.
+### 3. Historial y Edición Independiente de Recordatorios
+*   **Historial:** Puedes navegar por el historial de cualquier vehículo para revisar gastos pasados. Si olvidaste programar un recordatorio en un registro antiguo, simplemente edítalo y añade la frecuencia de mantenimiento deseada de forma segura.
+*   **Edición de Recordatorios Directa:** Si deseas modificar o postergar una alerta existente, pulsa directamente sobre la tarjeta de alerta en el Dashboard principal. Esto te llevará a la pantalla de edición dedicada donde podrás cambiar el kilometraje, ajustar la fecha, eliminar el recordatorio o marcarlo como completado para archivarlo.
+
 

@@ -35,7 +35,8 @@ fun DashboardScreen(
     onNavigateToAddMaintenance: (Int) -> Unit,
     onNavigateToAddExpense: (Int) -> Unit,
     onNavigateToHistory: (Int) -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToEditReminder: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showVehicleSelector by remember { mutableStateOf(false) }
@@ -180,6 +181,7 @@ fun DashboardScreen(
                 fuelPerformance = uiState.fuelPerformance,
                 reminders = uiState.reminders,
                 onEditVehicle = { onNavigateToEditVehicle(uiState.vehicle!!.id) },
+                onEditReminder = onNavigateToEditReminder,
                 modifier = Modifier.padding(padding)
             )
 
@@ -222,6 +224,7 @@ fun DashboardContent(
     fuelPerformance: Double,
     reminders: List<com.autocare.data.entity.Reminder>,
     onEditVehicle: () -> Unit,
+    onEditReminder: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -332,7 +335,7 @@ fun DashboardContent(
                 }
 
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().clickable { onEditReminder(reminder.id) },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
