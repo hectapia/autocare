@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.EvStation
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,7 +33,8 @@ fun HistoryScreen(
     onEditExp: (Int) -> Unit,
     onAddFuel: (Int) -> Unit,
     onAddMaint: (Int) -> Unit,
-    onAddExp: (Int) -> Unit
+    onAddExp: (Int) -> Unit,
+    onEditReminder: (Int) -> Unit
 ) {
     val uiState by viewModel.getHistory(vehicleId).collectAsState(initial = HistoryUiState())
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -103,13 +105,19 @@ fun HistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(filteredList) { item ->
-                        HistoryCard(item = item, onClick = {
-                            when (item) {
-                                is HistoryItem.Fuel -> onEditFuel(item.data.id)
-                                is HistoryItem.Maint -> onEditMaint(item.data.id)
-                                is HistoryItem.Exp -> onEditExp(item.data.id)
+                        HistoryCard(
+                            item = item,
+                            onClick = {
+                                when (item) {
+                                    is HistoryItem.Fuel -> onEditFuel(item.data.id)
+                                    is HistoryItem.Maint -> onEditMaint(item.data.id)
+                                    is HistoryItem.Exp -> onEditExp(item.data.id)
+                                }
+                            },
+                            onReminderClick = { reminderId ->
+                                onEditReminder(reminderId)
                             }
-                        })
+                        )
                     }
                 }
             }
@@ -126,7 +134,11 @@ data class HistoryDisplayData(
 )
 
 @Composable
-fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
+fun HistoryCard(
+    item: HistoryItem,
+    onClick: () -> Unit,
+    onReminderClick: (Int) -> Unit
+) {
     val data = when (item) {
         is HistoryItem.Fuel -> HistoryDisplayData(
             "Carga de Combustible",
@@ -173,6 +185,20 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
                 Text(data.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                 Text(dateStr, style = MaterialTheme.typography.bodySmall)
             }
+            if (item is HistoryItem.Maint && item.reminderId != null) {
+                IconButton(
+                    onClick = { onReminderClick(item.reminderId) },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Tiene recordatorio",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
             Text(data.amount, style = MaterialTheme.typography.titleMedium, color = data.color, fontWeight = FontWeight.Bold)
         }
     }
@@ -184,7 +210,7 @@ data class HistoryUiState(
 
 sealed class HistoryItem {
     data class Fuel(val data: com.autocare.data.entity.FuelLoad) : HistoryItem()
-    data class Maint(val data: com.autocare.data.entity.Maintenance) : HistoryItem()
+    data class Maint(val data: com.autocare.data.entity.Maintenance, val reminderId: Int? = null) : HistoryItem()
     data class Exp(val data: com.autocare.data.entity.Expense) : HistoryItem()
     val date: Long get() = when(this) {
         is Fuel -> data.date
