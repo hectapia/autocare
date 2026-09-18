@@ -23,6 +23,9 @@ import com.autocare.ui.history.HistoryViewModelFactory
 import com.autocare.ui.maintenance.AddMaintenanceScreen
 import com.autocare.ui.maintenance.MaintenanceViewModel
 import com.autocare.ui.maintenance.MaintenanceViewModelFactory
+import com.autocare.ui.reminder.EditReminderScreen
+import com.autocare.ui.reminder.ReminderViewModel
+import com.autocare.ui.reminder.ReminderViewModelFactory
 import com.autocare.ui.vehicle.AddVehicleScreen
 import com.autocare.ui.vehicle.VehicleViewModel
 import com.autocare.ui.vehicle.VehicleViewModelFactory
@@ -50,6 +53,9 @@ sealed class Screen(val route: String) {
     }
     object EditExpense : Screen("edit_expense/{expenseId}") {
         fun createRoute(expenseId: Int) = "edit_expense/$expenseId"
+    }
+    object EditReminder : Screen("edit_reminder/{reminderId}") {
+        fun createRoute(reminderId: Int) = "edit_reminder/$reminderId"
     }
     object History : Screen("history/{vehicleId}") {
         fun createRoute(vehicleId: Int) = "history/$vehicleId"
@@ -102,6 +108,9 @@ fun AutoCareNavGraph(
                 },
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onNavigateToEditReminder = { reminderId ->
+                    navController.navigate(Screen.EditReminder.createRoute(reminderId))
                 }
             )
         }
@@ -296,6 +305,22 @@ fun AutoCareNavGraph(
                 onAddExp = { vId ->
                     navController.navigate(Screen.AddExpense.createRoute(vId))
                 }
+            )
+        }
+        composable(
+            route = Screen.EditReminder.route,
+            arguments = listOf(androidx.navigation.navArgument("reminderId") {
+                type = androidx.navigation.NavType.IntType
+            })
+        ) { backStackEntry ->
+            val reminderId = backStackEntry.arguments?.getInt("reminderId") ?: -1
+            val reminderViewModel: ReminderViewModel = viewModel(
+                factory = ReminderViewModelFactory(app.reminderRepository)
+            )
+            EditReminderScreen(
+                reminderId = reminderId,
+                viewModel = reminderViewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
