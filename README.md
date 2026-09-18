@@ -88,7 +88,7 @@ El dashboard actúa como tu centro de mando:
 *   **Tarjetas de Alerta**: Cada recordatorio próximo muestra exactamente qué condición está por cumplirse (*"Faltan 200 km"* o *"Vencido hace 2 días"*).
 
 ### 3. Historial y Edición Independiente de Recordatorios
-*   **Historial:** Puedes navegar por el historial de cualquier vehículo para revisar gastos pasados. Si olvidaste programar un recordatorio en un registro antiguo, simplemente edítalo y añade la frecuencia de mantenimiento deseada de forma segura.
+*   **Historial con Enlace a Recordatorios:** Al navegar por la pestaña de Mantenimientos en el Historial de cualquier vehículo, la aplicación muestra de un vistazo si cada mantenimiento tiene un recordatorio activo mediante un **ícono de campana/notificación** junto al título. Al presionar este ícono, serás redirigido directamente a la pantalla de edición del recordatorio asociado para actualizar sus metas, guardarlo o completarlo.
 *   **Edición de Recordatorios Directa:** Si deseas modificar o postergar una alerta existente, pulsa directamente sobre la tarjeta de alerta en el Dashboard principal. Esto te llevará a la pantalla de edición dedicada donde podrás cambiar el kilometraje, ajustar la fecha, eliminar el recordatorio o marcarlo como completado para archivarlo.
 
 

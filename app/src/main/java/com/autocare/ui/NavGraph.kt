@@ -278,7 +278,8 @@ fun AutoCareNavGraph(
                 factory = HistoryViewModelFactory(
                     app.fuelLoadRepository,
                     app.maintenanceRepository,
-                    app.expenseRepository
+                    app.expenseRepository,
+                    app.reminderRepository
                 )
             )
             HistoryScreen(
@@ -304,6 +305,9 @@ fun AutoCareNavGraph(
                 },
                 onAddExp = { vId ->
                     navController.navigate(Screen.AddExpense.createRoute(vId))
+                },
+                onEditReminder = { reminderId ->
+                    navController.navigate(Screen.EditReminder.createRoute(reminderId))
                 }
             )
         }
