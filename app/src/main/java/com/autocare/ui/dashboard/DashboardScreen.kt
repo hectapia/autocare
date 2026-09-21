@@ -1,5 +1,6 @@
 package com.autocare.ui.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -182,6 +183,7 @@ fun DashboardScreen(
                 reminders = uiState.reminders,
                 onEditVehicle = { onNavigateToEditVehicle(uiState.vehicle!!.id) },
                 onEditReminder = onNavigateToEditReminder,
+                otherVehiclesWithReminders = uiState.otherVehiclesWithReminders,
                 modifier = Modifier.padding(padding)
             )
 
@@ -193,10 +195,13 @@ fun DashboardScreen(
                     text = {
                         Column {
                             uiState.allVehicles.forEach { vehicle ->
+                                val isSelected = vehicle.id == uiState.vehicle?.id
                                 ListItem(
                                     headlineContent = { Text("${vehicle.brand} ${vehicle.model}") },
                                     supportingContent = { Text(vehicle.plate) },
-                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                    colors = ListItemDefaults.colors(
+                                        containerColor = if (isSelected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f) else Color.Transparent
+                                    ),
                                     modifier = Modifier.clickable {
                                         viewModel.selectVehicle(vehicle.id)
                                         showVehicleSelector = false
@@ -225,6 +230,7 @@ fun DashboardContent(
     reminders: List<com.autocare.data.entity.Reminder>,
     onEditVehicle: () -> Unit,
     onEditReminder: (Int) -> Unit,
+    otherVehiclesWithReminders: List<Vehicle>,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -234,12 +240,49 @@ fun DashboardContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Alerta para otros vehículos
+        if (otherVehiclesWithReminders.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            "Otros vehículos requieren atención",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            "Tienes recordatorios pendientes en: ${otherVehiclesWithReminders.joinToString { it.brand }}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+        }
+
         // Vehicle Info Card with Image
         Card(
             modifier = Modifier.fillMaxWidth(),
             onClick = onEditVehicle,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
@@ -337,7 +380,8 @@ fun DashboardContent(
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { onEditReminder(reminder.id) },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -416,7 +460,8 @@ fun StatCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier

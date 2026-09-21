@@ -67,7 +67,9 @@ sealed class Screen(val route: String) {
 fun AutoCareNavGraph(
     navController: NavHostController = rememberNavController(),
     darkTheme: Boolean,
-    onThemeChange: (Boolean) -> Unit
+    onThemeChange: (Boolean) -> Unit,
+    isBiometricSecurityEnabled: Boolean,
+    onBiometricSecurityChange: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as AutoCareApplication
@@ -118,6 +120,8 @@ fun AutoCareNavGraph(
             SettingsScreen(
                 darkTheme = darkTheme,
                 onThemeChange = onThemeChange,
+                isBiometricSecurityEnabled = isBiometricSecurityEnabled,
+                onBiometricSecurityChange = onBiometricSecurityChange,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
