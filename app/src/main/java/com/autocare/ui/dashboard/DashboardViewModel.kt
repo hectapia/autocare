@@ -20,6 +20,7 @@ data class DashboardUiState(
     val nextOilChangeKm: Int? = null,
     val fuelPerformance: Double = 0.0,
     val reminders: List<com.autocare.data.entity.Reminder> = emptyList(),
+    val otherVehiclesWithReminders: List<Vehicle> = emptyList(),
     val isLoading: Boolean = true
 )
 
@@ -60,9 +61,13 @@ class DashboardViewModel(
                         fuelLoadRepository.getFuelLoadsForVehicle(currentVehicle.id),
                         expenseRepository.getExpensesForVehicle(currentVehicle.id),
                         maintenanceRepository.getMaintenancesForVehicle(currentVehicle.id),
-                        reminderRepository.getActiveReminders(currentVehicle.id)
-                    ) { fuel, exp, maint, reminders ->
-                        calculateUiState(currentVehicle, vehicles, fuel, exp, maint, reminders)
+                        reminderRepository.getActiveReminders(currentVehicle.id),
+                        reminderRepository.getAllActiveReminders()
+                    ) { fuel, exp, maint, reminders, allActiveReminders ->
+                        val otherVehiclesWithReminders = vehicles.filter { v ->
+                            v.id != currentVehicle.id && allActiveReminders.any { r -> r.vehicleId == v.id }
+                        }
+                        calculateUiState(currentVehicle, vehicles, fuel, exp, maint, reminders, otherVehiclesWithReminders)
                     }
                 }
             }.collect { newState ->
@@ -77,7 +82,8 @@ class DashboardViewModel(
         fuelLoads: List<com.autocare.data.entity.FuelLoad>,
         expenses: List<com.autocare.data.entity.Expense>,
         maintenances: List<com.autocare.data.entity.Maintenance>,
-        reminders: List<com.autocare.data.entity.Reminder>
+        reminders: List<com.autocare.data.entity.Reminder>,
+        otherVehiclesWithReminders: List<Vehicle>
     ): DashboardUiState {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_MONTH, 1)
@@ -104,6 +110,7 @@ class DashboardViewModel(
             nextOilChangeKm = nextService?.targetKm?.let { it - vehicle.currentKm },
             fuelPerformance = avgPerformance,
             reminders = reminders,
+            otherVehiclesWithReminders = otherVehiclesWithReminders,
             isLoading = false
         )
     }

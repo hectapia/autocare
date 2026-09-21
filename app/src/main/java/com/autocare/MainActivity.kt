@@ -19,13 +19,24 @@ import com.autocare.ui.theme.AutoCareTheme
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val app = application as AutoCareApplication
+        val userPrefs = app.userPreferences
+
         enableEdgeToEdge()
         setContent {
-            var isDarkTheme by remember { mutableStateOf(false) }
+            var isDarkTheme by remember { mutableStateOf(userPrefs.isDarkTheme) }
+            var isAutoLoginEnabled by remember { mutableStateOf(userPrefs.isAutoLoginEnabled) }
             
             AutoCareTheme(darkTheme = isDarkTheme) {
-                var isAuthenticated by remember { mutableStateOf(false) }
-                var showAuthPrompt by remember { mutableStateOf(true) }
+                // Si la Seguridad Biométrica / AutoLogin está ACTIVADA, se requiere autenticación (isAuthenticated = false)
+                // Si está DESACTIVADA, se permite el acceso directo (isAuthenticated = true)
+                var isAuthenticated by remember { 
+                    mutableStateOf(!isAutoLoginEnabled) 
+                }
+                var showAuthPrompt by remember { 
+                    mutableStateOf(isAutoLoginEnabled)
+                }
 
                 if (isAuthenticated) {
                     Surface(
@@ -34,7 +45,15 @@ class MainActivity : FragmentActivity() {
                     ) {
                         AutoCareNavGraph(
                             darkTheme = isDarkTheme,
-                            onThemeChange = { isDarkTheme = it }
+                            onThemeChange = { 
+                                isDarkTheme = it
+                                userPrefs.isDarkTheme = it
+                            },
+                            isBiometricSecurityEnabled = isAutoLoginEnabled,
+                            onBiometricSecurityChange = {
+                                isAutoLoginEnabled = it
+                                userPrefs.isAutoLoginEnabled = it
+                            }
                         )
                     }
                 } else {
@@ -59,13 +78,15 @@ class MainActivity : FragmentActivity() {
 
     private fun checkAndShowBiometric(onResult: (Boolean) -> Unit) {
         val biometricManager = BiometricManager.from(this)
-        when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)) {
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        
+        when (biometricManager.canAuthenticate(authenticators)) {
             BiometricManager.BIOMETRIC_SUCCESS -> {
                 showBiometricPrompt(onResult)
             }
             else -> {
-                // Biometrics not available or not enrolled
-                onResult(true) // Bypass
+                // Si no hay biométricos configurados, permitimos el acceso
+                onResult(true)
             }
         }
     }

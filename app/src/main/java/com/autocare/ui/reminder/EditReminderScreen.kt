@@ -125,24 +125,7 @@ fun EditReminderScreen(
                 )
             },
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        viewModel.saveReminder(
-                            id = reminder.id,
-                            vehicleId = reminder.vehicleId,
-                            title = title,
-                            description = description,
-                            type = reminder.type,
-                            targetKm = targetKm,
-                            targetDate = targetDate,
-                            isCompleted = isCompleted,
-                            uuid = reminder.uuid,
-                            onSuccess = onNavigateBack
-                        )
-                    },
-                    icon = { Icon(Icons.Default.Save, null) },
-                    text = { Text("Guardar Cambios") }
-                )
+                // Removido para homologar con otras pantallas que usan botones al final del formulario
             }
         ) { padding ->
             Column(
@@ -196,6 +179,28 @@ fun EditReminderScreen(
                         onCheckedChange = { isCompleted = it }
                     )
                     Text("Marcar como completado")
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    onClick = {
+                        viewModel.saveReminder(
+                            id = reminder.id,
+                            vehicleId = reminder.vehicleId,
+                            title = title,
+                            description = description,
+                            type = reminder.type,
+                            targetKm = targetKm,
+                            targetDate = targetDate,
+                            isCompleted = isCompleted,
+                            uuid = reminder.uuid,
+                            onSuccess = onNavigateBack
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Guardar Cambios")
                 }
 
                 if (showDatePicker) {

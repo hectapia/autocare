@@ -63,17 +63,21 @@ erDiagram
 
 ## Funcionalidades Principales
 
-- **Seguridad Biométrica**: Acceso protegido mediante huella dactilar o credenciales del dispositivo.
-- **Gestión de Vehículos**: Soporte para múltiples vehículos con registro de marca, modelo, año y kilometraje actual.
+- **Seguridad Biométrica**: Acceso protegido mediante huella dactilar o credenciales del dispositivo. Configurable desde la pantalla de Ajustes (activar para requerir autenticación, desactivar para acceso directo).
+- **Gestión de Vehículos**: Soporte para múltiples vehículos con registro de marca, modelo, año y kilometraje actual. Incluye un selector intuitivo con resaltado del vehículo activo.
 - **Sistema de Recordatorios Inteligentes**:
     - Alertas basadas en **Kilometraje** (ej. próximo cambio de aceite).
     - Alertas basadas en **Tiempo/Fecha** (ej. vencimiento de seguro o revisión técnica).
+    - **Monitoreo Multi-Vehículo**: Notificaciones en el panel principal sobre tareas pendientes en otros vehículos registrados.
+    - **Notificaciones del Sistema**: Alertas locales automáticas para recordatorios con severidad `CRÍTICA`.
     - Cálculo dinámico de severidad: `CRÍTICO` (vencido), `ADVERTENCIA` (próximo) y `AL DÍA`.
 - **Seguimiento de Mantenimiento**: Registro detallado de servicios, reparaciones y costos asociados.
 - **Control de Combustible**: Monitoreo de consumos (km/L) y gastos en gasolineras.
 - **Estadísticas Financieras**: Resumen de gastos mensuales categorizados.
 - **Documentación Fotográfica**: Integración con cámara y galería para fotos de vehículos.
-- **Interfaz Moderna**: Diseño basado en Material 3 con paleta automotriz profesional y tipografía Poppins.
+- **Interfaz Moderna**: Diseño basado en Material 3 con paleta automotriz profesional (tipografía Poppins). Consistencia visual mediante el uso de bordes finos (1dp) en tarjetas y estados de selección optimizados (`ACGray`).
+- **Configuración Persistente**: Guardado automático de preferencias de usuario como el tema oscuro y el estado de la seguridad biométrica.
+- **Robustez de Datos**: Lógica de emparejamiento entre mantenimientos y recordatorios validada mediante una suite de pruebas unitarias.
 
 ## Guía de Uso y Ejemplos
 
@@ -84,8 +88,9 @@ Cuando realizas un servicio, puedes programar el siguiente automáticamente:
 
 ### 2. Panel de Control (Dashboard)
 El dashboard actúa como tu centro de mando:
-*   **Icono de Campana**: En la barra superior, una campana con un contador rojo te indica cuántas tareas requieren tu atención.
-*   **Tarjetas de Alerta**: Cada recordatorio próximo muestra exactamente qué condición está por cumplirse (*"Faltan 200 km"* o *"Vencido hace 2 días"*).
+*   **Icono de Campana**: En la barra superior, una campana con un contador rojo te indica cuántas tareas requieren tu atención en el vehículo actual.
+*   **Alerta Multi-Vehículo**: Si tienes más de un auto registrado, el Dashboard te avisará si alguno de los otros vehículos tiene recordatorios vencidos o próximos, permitiéndote cambiar de perfil rápidamente.
+*   **Tarjetas de Alerta**: Cada recordatorio próximo muestra exactamente qué condición está por cumplirse (*"Faltan 200 km"* o *"Vencido hace 2 días"*). Las tarjetas cuentan con bordes definidos para facilitar su lectura.
 
 ### 3. Historial y Edición Independiente de Recordatorios
 *   **Historial con Enlace a Recordatorios:** Al navegar por la pestaña de Mantenimientos en el Historial de cualquier vehículo, la aplicación muestra de un vistazo si cada mantenimiento tiene un recordatorio activo mediante un **ícono de campana/notificación** junto al título. Al presionar este ícono, serás redirigido directamente a la pantalla de edición del recordatorio asociado para actualizar sus metas, guardarlo o completarlo.

@@ -6,6 +6,7 @@ val ACDark = Color(0xFF0B132B)
 val ACBlue = Color(0xFF0077FF)
 val ACTeal = Color(0xFF00C9A7)
 val ACGreen = Color(0xFF7AF548)
+val ACGray = Color(0xFFE6EEF5).copy(alpha = 0.12f)
 val ACLightGreen = Color(0xFF0ABD6F)
 val ACText = Color(0xFFE6EEF5)
 
