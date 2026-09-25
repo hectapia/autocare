@@ -11,7 +11,21 @@ import com.autocare.data.repository.ReminderRepository
 import com.autocare.data.repository.VehicleRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
+
+data class FuelEfficiencyPoint(
+    val dateLabel: String,
+    val kmPerLiter: Double,
+    val timestamp: Long
+)
+
+data class CostBreakdownState(
+    val fuelTotal: Double,
+    val maintenanceTotal: Double,
+    val expenseTotal: Double,
+    val totalAmount: Double
+)
 
 data class DashboardUiState(
     val vehicle: Vehicle? = null,
@@ -21,6 +35,8 @@ data class DashboardUiState(
     val fuelPerformance: Double = 0.0,
     val reminders: List<com.autocare.data.entity.Reminder> = emptyList(),
     val otherVehiclesWithReminders: List<Vehicle> = emptyList(),
+    val fuelEfficiencyPoints: List<FuelEfficiencyPoint> = emptyList(),
+    val costBreakdown: CostBreakdownState = CostBreakdownState(0.0, 0.0, 0.0, 0.0),
     val isLoading: Boolean = true
 )
 
@@ -100,6 +116,42 @@ class DashboardViewModel(
         } else 0
         val avgPerformance = if (totalLiters > 0) totalKm / totalLiters else 0.0
 
+        // Tendencia de Eficiencia de Combustible (Point-to-Point) - Limit to last 10 for clarity
+        val sortedFuelLoads = fuelLoads.sortedBy { it.odometer }
+        val dateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
+        val efficiencyPoints = mutableListOf<FuelEfficiencyPoint>()
+
+        for (i in 1 until sortedFuelLoads.size) {
+            val prev = sortedFuelLoads[i - 1]
+            val curr = sortedFuelLoads[i]
+            val distance = curr.odometer - prev.odometer
+            if (curr.liters > 0) {
+                val efficiency = distance / curr.liters
+                efficiencyPoints.add(
+                    FuelEfficiencyPoint(
+                        dateLabel = dateFormat.format(Date(curr.date)),
+                        kmPerLiter = efficiency,
+                        timestamp = curr.date
+                    )
+                )
+            }
+        }
+        
+        // Removed takeLast limit as we now support horizontal scrolling in the chart
+
+        // Desglose de Costos (Totales)
+        val fuelTotal = fuelLoads.sumOf { it.totalCost }
+        val maintTotal = maintenances.sumOf { it.cost }
+        val expTotal = expenses.sumOf { it.amount }
+        val totalAmount = fuelTotal + maintTotal + expTotal
+
+        val costBreakdown = CostBreakdownState(
+            fuelTotal = fuelTotal,
+            maintenanceTotal = maintTotal,
+            expenseTotal = expTotal,
+            totalAmount = totalAmount
+        )
+
         // Próximo servicio desde Reminders
         val nextService = reminders.firstOrNull { it.type == "MAINTENANCE" }
 
@@ -111,6 +163,8 @@ class DashboardViewModel(
             fuelPerformance = avgPerformance,
             reminders = reminders,
             otherVehiclesWithReminders = otherVehiclesWithReminders,
+            fuelEfficiencyPoints = efficiencyPoints,
+            costBreakdown = costBreakdown,
             isLoading = false
         )
     }

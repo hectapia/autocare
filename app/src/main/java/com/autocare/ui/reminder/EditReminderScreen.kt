@@ -106,23 +106,30 @@ fun EditReminderScreen(
 
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Editar Recordatorio") },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            viewModel.deleteReminder(reminder) {
-                                onNavigateBack()
+                Column {
+                    TopAppBar(
+                        title = { Text("Editar Recordatorio") },
+                        navigationIcon = {
+                            IconButton(onClick = onNavigateBack) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                             }
-                        }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                        },
+                        actions = {
+                            IconButton(onClick = {
+                                viewModel.deleteReminder(reminder) {
+                                    onNavigateBack()
+                                }
+                            }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                            }
                         }
-                    }
-                )
+                    )
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             },
             floatingActionButton = {
                 // Removido para homologar con otras pantallas que usan botones al final del formulario

@@ -87,21 +87,28 @@ fun AddVehicleScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(if (isEditing) "Editar Vehículo" else "Nuevo Vehículo") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                actions = {
-                    if (isEditing) {
-                        IconButton(onClick = { showDeleteConfirmation = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+            Column {
+                TopAppBar(
+                    title = { Text(if (isEditing) "Editar Vehículo" else "Nuevo Vehículo") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    actions = {
+                        if (isEditing) {
+                            IconButton(onClick = { showDeleteConfirmation = true }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                            }
                         }
                     }
-                }
-            )
+                )
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     ) { padding ->
         Column(
