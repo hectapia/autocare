@@ -23,10 +23,18 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import com.autocare.data.entity.calculateSeverity
 import coil.compose.AsyncImage
 import com.autocare.data.entity.Vehicle
+import com.autocare.ui.analytics.CostBreakdownPieChart
+import com.autocare.ui.analytics.FuelEfficiencyChart
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.ui.platform.LocalConfiguration
+import android.content.res.Configuration
+import androidx.compose.ui.tooling.preview.Preview
+import com.autocare.ui.theme.AutoCareTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
@@ -40,104 +48,149 @@ fun DashboardScreen(
     onNavigateToEditReminder: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showVehicleSelector by remember { mutableStateOf(false) }
+    DashboardScreenContent(
+        uiState = uiState,
+        onNavigateToAddVehicle = onNavigateToAddVehicle,
+        onNavigateToEditVehicle = onNavigateToEditVehicle,
+        onNavigateToAddFuel = onNavigateToAddFuel,
+        onNavigateToAddMaintenance = onNavigateToAddMaintenance,
+        onNavigateToAddExpense = onNavigateToAddExpense,
+        onNavigateToHistory = onNavigateToHistory,
+        onNavigateToSettings = onNavigateToSettings,
+        onNavigateToEditReminder = onNavigateToEditReminder,
+        onSelectVehicle = { viewModel.selectVehicle(it) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DashboardScreenContent(
+    uiState: DashboardUiState,
+    onNavigateToAddVehicle: () -> Unit,
+    onNavigateToEditVehicle: (Int) -> Unit,
+    onNavigateToAddFuel: (Int) -> Unit,
+    onNavigateToAddMaintenance: (Int) -> Unit,
+    onNavigateToAddExpense: (Int) -> Unit,
+    onNavigateToHistory: (Int) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToEditReminder: (Int) -> Unit,
+    onSelectVehicle: (Int) -> Unit,
+    initialShowVehicleSelector: Boolean = false
+) {
+    var showVehicleSelector by remember { mutableStateOf(initialShowVehicleSelector) }
+    var areBarsVisible by remember { mutableStateOf(true) }
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Scaffold(
         topBar = {
-            Column {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { if (uiState.allVehicles.size > 1) showVehicleSelector = true }
-                        ) {
-                            Text("AutoCare")
-                            if (uiState.allVehicles.size > 1) {
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+            AnimatedVisibility(
+                visible = areBarsVisible || !isLandscape,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    TopAppBar(
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable { if (uiState.allVehicles.size > 1) showVehicleSelector = true }
+                            ) {
+                                Text("AutoCare")
+                                if (uiState.allVehicles.size > 1) {
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                                }
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.background,
+                            titleContentColor = MaterialTheme.colorScheme.onSurface,
+                            actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        actions = {
+                            val pendingCount = uiState.reminders.count { !it.isCompleted }
+                            BadgedBox(
+                                badge = {
+                                    if (pendingCount > 0) {
+                                        Badge {
+                                            Text(pendingCount.toString())
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.padding(end = 16.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = "Reminders",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    actions = {
-                        val pendingCount = uiState.reminders.count { !it.isCompleted }
-                        BadgedBox(
-                            badge = {
-                                if (pendingCount > 0) {
-                                    Badge {
-                                        Text(pendingCount.toString())
-                                    }
-                                }
-                            },
-                            modifier = Modifier.padding(end = 16.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "Reminders",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), thickness = 1.dp)
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         },
         bottomBar = {
-            Column {
-                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), thickness = 1.dp)
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    tonalElevation = 0.dp
-                ) {
-                    val navItemColors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.onSurface,
-                        selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        indicatorColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+            AnimatedVisibility(
+                visible = areBarsVisible || !isLandscape,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        tonalElevation = 0.dp
+                    ) {
+                        val navItemColors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                            selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            indicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
 
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.DirectionsCar, contentDescription = "Dashboard") },
-                        selected = true,
-                        onClick = { },
-                        colors = navItemColors
-                    )
-                    uiState.vehicle?.let { vehicle ->
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.EvStation, contentDescription = "Carga Gas") },
-                            selected = false,
-                            onClick = { onNavigateToAddFuel(vehicle.id) },
+                            icon = { Icon(Icons.Default.DirectionsCar, contentDescription = "Dashboard") },
+                            selected = true,
+                            onClick = { },
                             colors = navItemColors
                         )
+                        uiState.vehicle?.let { vehicle ->
+                            NavigationBarItem(
+                                icon = { Icon(Icons.Default.EvStation, contentDescription = "Carga Gas") },
+                                selected = false,
+                                onClick = { onNavigateToAddFuel(vehicle.id) },
+                                colors = navItemColors
+                            )
+                            NavigationBarItem(
+                                icon = { Icon(Icons.Default.Build, contentDescription = "Mantenimiento") },
+                                selected = false,
+                                onClick = { onNavigateToAddMaintenance(vehicle.id) },
+                                colors = navItemColors
+                            )
+                            NavigationBarItem(
+                                icon = { Icon(Icons.Default.Receipt, contentDescription = "Gasto") },
+                                selected = false,
+                                onClick = { onNavigateToAddExpense(vehicle.id) },
+                                colors = navItemColors
+                            )
+                            NavigationBarItem(
+                                icon = { Icon(Icons.Default.History, contentDescription = "Historial") },
+                                selected = false,
+                                onClick = { onNavigateToHistory(vehicle.id) },
+                                colors = navItemColors
+                            )
+                        }
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Build, contentDescription = "Mantenimiento") },
+                            icon = { Icon(Icons.Default.Settings, contentDescription = "Ajustes") },
                             selected = false,
-                            onClick = { onNavigateToAddMaintenance(vehicle.id) },
-                            colors = navItemColors
-                        )
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Default.Receipt, contentDescription = "Gasto") },
-                            selected = false,
-                            onClick = { onNavigateToAddExpense(vehicle.id) },
-                            colors = navItemColors
-                        )
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Default.History, contentDescription = "Historial") },
-                            selected = false,
-                            onClick = { onNavigateToHistory(vehicle.id) },
+                            onClick = onNavigateToSettings,
                             colors = navItemColors
                         )
                     }
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Settings, contentDescription = "Ajustes") },
-                        selected = false,
-                        onClick = onNavigateToSettings,
-                        colors = navItemColors
-                    )
                 }
             }
         },
@@ -176,15 +229,21 @@ fun DashboardScreen(
             }
         } else {
             DashboardContent(
-                vehicle = uiState.vehicle!!,
+                vehicle = uiState.vehicle,
                 monthlyExpense = uiState.monthlyExpense,
                 nextOilChange = uiState.nextOilChangeKm,
                 fuelPerformance = uiState.fuelPerformance,
                 reminders = uiState.reminders,
-                onEditVehicle = { onNavigateToEditVehicle(uiState.vehicle!!.id) },
+                fuelEfficiencyPoints = uiState.fuelEfficiencyPoints,
+                costBreakdown = uiState.costBreakdown,
+                onEditVehicle = { onNavigateToEditVehicle(uiState.vehicle.id) },
                 onEditReminder = onNavigateToEditReminder,
                 otherVehiclesWithReminders = uiState.otherVehiclesWithReminders,
-                modifier = Modifier.padding(padding)
+                onToggleBars = { if (isLandscape) areBarsVisible = !areBarsVisible },
+                modifier = Modifier.padding(
+                    top = if (areBarsVisible || !isLandscape) padding.calculateTopPadding() else 0.dp,
+                    bottom = if (areBarsVisible || !isLandscape) padding.calculateBottomPadding() else 0.dp
+                )
             )
 
             if (showVehicleSelector) {
@@ -203,7 +262,7 @@ fun DashboardScreen(
                                         containerColor = if (isSelected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f) else Color.Transparent
                                     ),
                                     modifier = Modifier.clickable {
-                                        viewModel.selectVehicle(vehicle.id)
+                                        onSelectVehicle(vehicle.id)
                                         showVehicleSelector = false
                                     }
                                 )
@@ -228,15 +287,22 @@ fun DashboardContent(
     nextOilChange: Int?,
     fuelPerformance: Double,
     reminders: List<com.autocare.data.entity.Reminder>,
+    fuelEfficiencyPoints: List<FuelEfficiencyPoint>,
+    costBreakdown: CostBreakdownState,
     onEditVehicle: () -> Unit,
     onEditReminder: (Int) -> Unit,
     otherVehiclesWithReminders: List<Vehicle>,
+    onToggleBars: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .clickable(
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = null
+            ) { onToggleBars() }
+            .padding(horizontal = 16.dp, vertical = 0.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -351,6 +417,48 @@ fun DashboardContent(
             valueColor = if ((nextOilChange ?: 1000) < 500) Color.Red else MaterialTheme.colorScheme.secondary,
             modifier = Modifier.fillMaxWidth()
         )
+
+        // Analytics Section
+        Text(
+            text = "Estadísticas e Insights",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Tendencia de Eficiencia (km/L)",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                FuelEfficiencyChart(points = fuelEfficiencyPoints)
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Desglose de Gastos Totales",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                CostBreakdownPieChart(breakdown = costBreakdown)
+            }
+        }
 
         // Alertas de Recordatorios Pendientes (Alertas de Mantenimiento por Categoría y Frecuencia)
         if (reminders.any { !it.isCompleted }) {
@@ -487,5 +595,351 @@ fun StatCard(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardScreenPreview() {
+    val sampleVehicle = Vehicle(
+        id = 1,
+        brand = "Toyota",
+        model = "Corolla",
+        year = 2022,
+        plate = "ABC-1234",
+        currentKm = 15000
+    )
+    
+    val sampleReminder = com.autocare.data.entity.Reminder(
+        id = 1,
+        vehicleId = 1,
+        title = "Cambio de Aceite",
+        description = "Cambio sintético 5W-30",
+        type = "MAINTENANCE",
+        targetKm = 15500
+    )
+
+    val sampleUiState = DashboardUiState(
+        vehicle = sampleVehicle,
+        allVehicles = listOf(sampleVehicle),
+        monthlyExpense = 150.0,
+        nextOilChangeKm = 500,
+        fuelPerformance = 14.2,
+        reminders = listOf(sampleReminder),
+        fuelEfficiencyPoints = listOf(
+            FuelEfficiencyPoint("Ene", 14.0, 0L),
+            FuelEfficiencyPoint("Feb", 14.5, 0L)
+        ),
+        costBreakdown = CostBreakdownState(100.0, 50.0, 20.0, 170.0),
+        isLoading = false
+    )
+
+    AutoCareTheme {
+        DashboardScreenContent(
+            uiState = sampleUiState,
+            onNavigateToAddVehicle = {},
+            onNavigateToEditVehicle = {},
+            onNavigateToAddFuel = {},
+            onNavigateToAddMaintenance = {},
+            onNavigateToAddExpense = {},
+            onNavigateToHistory = {},
+            onNavigateToSettings = {},
+            onNavigateToEditReminder = {},
+            onSelectVehicle = {},
+            initialShowVehicleSelector = false
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark Mode")
+@Composable
+fun DashboardScreenDarkPreview() {
+    DashboardScreenPreview()
+}
+
+@Preview(showBackground = true, name = "Empty Dashboard")
+@Composable
+fun DashboardScreenEmptyPreview() {
+    val emptyUiState = DashboardUiState(
+        vehicle = null,
+        allVehicles = emptyList(),
+        isLoading = false
+    )
+
+    AutoCareTheme {
+        DashboardScreenContent(
+            uiState = emptyUiState,
+            onNavigateToAddVehicle = {},
+            onNavigateToEditVehicle = {},
+            onNavigateToAddFuel = {},
+            onNavigateToAddMaintenance = {},
+            onNavigateToAddExpense = {},
+            onNavigateToHistory = {},
+            onNavigateToSettings = {},
+            onNavigateToEditReminder = {},
+            onSelectVehicle = {},
+            initialShowVehicleSelector = false
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Other Vehicles Alert")
+@Composable
+fun DashboardScreenOtherVehiclesPreview() {
+    val sampleVehicle = Vehicle(id = 1, brand = "Toyota", model = "Corolla", year = 2022, plate = "ABC-1234", currentKm = 15000)
+    val otherVehicle = Vehicle(id = 2, brand = "Honda", model = "Civic", year = 2020, plate = "XYZ-9876", currentKm = 30000)
+
+    val sampleUiState = DashboardUiState(
+        vehicle = sampleVehicle,
+        allVehicles = listOf(sampleVehicle, otherVehicle),
+        monthlyExpense = 150.0,
+        nextOilChangeKm = 500,
+        fuelPerformance = 14.2,
+        reminders = emptyList(),
+        otherVehiclesWithReminders = listOf(otherVehicle),
+        isLoading = false
+    )
+
+    AutoCareTheme {
+        DashboardScreenContent(
+            uiState = sampleUiState,
+            onNavigateToAddVehicle = {},
+            onNavigateToEditVehicle = {},
+            onNavigateToAddFuel = {},
+            onNavigateToAddMaintenance = {},
+            onNavigateToAddExpense = {},
+            onNavigateToHistory = {},
+            onNavigateToSettings = {},
+            onNavigateToEditReminder = {},
+            onSelectVehicle = {},
+            initialShowVehicleSelector = false
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+fun DashboardContentPreview() {
+    val sampleVehicle = Vehicle(
+        id = 1,
+        brand = "Toyota",
+        model = "Corolla",
+        year = 2022,
+        plate = "ABC-1234",
+        currentKm = 15000
+    )
+    
+    val reminders = listOf(
+        com.autocare.data.entity.Reminder(
+            id = 1,
+            vehicleId = 1,
+            title = "Cambio de Aceite",
+            description = "Cambio sintético 5W-30",
+            type = "MAINTENANCE",
+            targetKm = 15500
+        ),
+        com.autocare.data.entity.Reminder(
+            id = 2,
+            vehicleId = 1,
+            title = "Seguro Anual",
+            description = "Renovación póliza",
+            type = "DOCUMENT",
+            targetDate = System.currentTimeMillis() + 5 * 24 * 60 * 60 * 1000L // 5 days from now
+        ),
+        com.autocare.data.entity.Reminder(
+            id = 3,
+            vehicleId = 1,
+            title = "Revisión Técnica",
+            description = "Vencida",
+            type = "DOCUMENT",
+            targetDate = System.currentTimeMillis() - 2 * 24 * 60 * 60 * 1000L // 2 days ago
+        )
+    )
+
+    AutoCareTheme {
+        DashboardContent(
+            vehicle = sampleVehicle,
+            monthlyExpense = 2450.50,
+            nextOilChange = 500,
+            fuelPerformance = 12.5,
+            reminders = reminders,
+            fuelEfficiencyPoints = listOf(
+                FuelEfficiencyPoint("01 Ene", 12.0, 0L),
+                FuelEfficiencyPoint("15 Ene", 13.0, 0L),
+                FuelEfficiencyPoint("01 Feb", 12.5, 0L)
+            ),
+            costBreakdown = CostBreakdownState(
+                fuelTotal = 1500.0,
+                maintenanceTotal = 800.0,
+                expenseTotal = 150.5,
+                totalAmount = 2450.5
+            ),
+            onEditVehicle = {},
+            onEditReminder = {},
+            otherVehiclesWithReminders = emptyList(),
+            onToggleBars = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+fun DashboardScreenLoadingPreview() {
+    val loadingUiState = DashboardUiState(
+        isLoading = true
+    )
+
+    AutoCareTheme {
+        DashboardScreenContent(
+            uiState = loadingUiState,
+            onNavigateToAddVehicle = {},
+            onNavigateToEditVehicle = {},
+            onNavigateToAddFuel = {},
+            onNavigateToAddMaintenance = {},
+            onNavigateToAddExpense = {},
+            onNavigateToHistory = {},
+            onNavigateToSettings = {},
+            onNavigateToEditReminder = {},
+            onSelectVehicle = {},
+            initialShowVehicleSelector = false
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 800, heightDp = 480, name = "Landscape")
+@Composable
+fun DashboardScreenLandscapePreview() {
+    val sampleVehicle = Vehicle(
+        id = 1,
+        brand = "Toyota",
+        model = "Corolla",
+        year = 2022,
+        plate = "ABC-1234",
+        currentKm = 15000
+    )
+    
+    val sampleUiState = DashboardUiState(
+        vehicle = sampleVehicle,
+        allVehicles = listOf(sampleVehicle),
+        monthlyExpense = 150.0,
+        nextOilChangeKm = 500,
+        fuelPerformance = 14.2,
+        reminders = emptyList(),
+        isLoading = false
+    )
+
+    AutoCareTheme {
+        DashboardScreenContent(
+            uiState = sampleUiState,
+            onNavigateToAddVehicle = {},
+            onNavigateToEditVehicle = {},
+            onNavigateToAddFuel = {},
+            onNavigateToAddMaintenance = {},
+            onNavigateToAddExpense = {},
+            onNavigateToHistory = {},
+            onNavigateToSettings = {},
+            onNavigateToEditReminder = {},
+            onSelectVehicle = {},
+            initialShowVehicleSelector = false
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Stat Card")
+@Composable
+fun StatCardPreview() {
+    AutoCareTheme {
+        StatCard(
+            title = "Kilometraje",
+            value = "15,000 km",
+            icon = Icons.Default.DirectionsCar,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Critical Alerts")
+@Composable
+fun DashboardScreenCriticalPreview() {
+    val sampleVehicle = Vehicle(
+        id = 1,
+        brand = "Ford",
+        model = "F-150",
+        year = 2018,
+        plate = "CRD-9999",
+        currentKm = 85000
+    )
+    
+    val criticalReminder = com.autocare.data.entity.Reminder(
+        id = 1,
+        vehicleId = 1,
+        title = "Cambio de Frenos",
+        description = "Pastillas delanteras desgastadas",
+        type = "MAINTENANCE",
+        targetKm = 84500 // Vencido por 500km
+    )
+
+    val expiredDocument = com.autocare.data.entity.Reminder(
+        id = 2,
+        vehicleId = 1,
+        title = "Seguro Obligatorio",
+        description = "Venció el mes pasado",
+        type = "DOCUMENT",
+        targetDate = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L // Hace 30 días
+    )
+
+    val sampleUiState = DashboardUiState(
+        vehicle = sampleVehicle,
+        allVehicles = listOf(sampleVehicle),
+        monthlyExpense = 1200.0,
+        nextOilChangeKm = -500, // ¡YA!
+        fuelPerformance = 8.5,
+        reminders = listOf(criticalReminder, expiredDocument),
+        isLoading = false
+    )
+
+    AutoCareTheme {
+        DashboardScreenContent(
+            uiState = sampleUiState,
+            onNavigateToAddVehicle = {},
+            onNavigateToEditVehicle = {},
+            onNavigateToAddFuel = {},
+            onNavigateToAddMaintenance = {},
+            onNavigateToAddExpense = {},
+            onNavigateToHistory = {},
+            onNavigateToSettings = {},
+            onNavigateToEditReminder = {},
+            onSelectVehicle = {},
+            initialShowVehicleSelector = false
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Vehicle Selector Dialog")
+@Composable
+fun DashboardScreenVehicleSelectorPreview() {
+    val sampleVehicle1 = Vehicle(id = 1, brand = "Toyota", model = "Corolla", year = 2022, plate = "ABC-1234", currentKm = 15000)
+    val sampleVehicle2 = Vehicle(id = 2, brand = "Honda", model = "Civic", year = 2020, plate = "XYZ-9876", currentKm = 30000)
+
+    val sampleUiState = DashboardUiState(
+        vehicle = sampleVehicle1,
+        allVehicles = listOf(sampleVehicle1, sampleVehicle2),
+        isLoading = false
+    )
+
+    AutoCareTheme {
+        DashboardScreenContent(
+            uiState = sampleUiState,
+            onNavigateToAddVehicle = {},
+            onNavigateToEditVehicle = {},
+            onNavigateToAddFuel = {},
+            onNavigateToAddMaintenance = {},
+            onNavigateToAddExpense = {},
+            onNavigateToHistory = {},
+            onNavigateToSettings = {},
+            onNavigateToEditReminder = {},
+            onSelectVehicle = {},
+            initialShowVehicleSelector = true
+        )
     }
 }

@@ -53,6 +53,11 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.biometric)
 
+    // Vico Chart Library for Jetpack Compose
+    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.22")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.22")
+    implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.22")
+
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
