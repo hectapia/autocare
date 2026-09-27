@@ -31,9 +31,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import android.content.res.Configuration
 import androidx.compose.ui.tooling.preview.Preview
 import com.autocare.ui.theme.AutoCareTheme
+import com.autocare.util.ReportUtils
 
 @Composable
 fun DashboardScreen(
@@ -80,6 +82,20 @@ fun DashboardScreenContent(
     var showVehicleSelector by remember { mutableStateOf(initialShowVehicleSelector) }
     var areBarsVisible by remember { mutableStateOf(true) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val context = LocalContext.current
+
+    val exportReport = {
+        uiState.vehicle?.let { vehicle ->
+            val file = ReportUtils.generateVehicleReport(
+                context,
+                vehicle,
+                uiState.fuelLoads,
+                uiState.maintenances,
+                uiState.expenses
+            )
+            file?.let { ReportUtils.shareFile(context, it) }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -107,6 +123,15 @@ fun DashboardScreenContent(
                             actionIconContentColor = MaterialTheme.colorScheme.onSurface
                         ),
                         actions = {
+                            if (uiState.vehicle != null) {
+                                IconButton(onClick = { exportReport() }) {
+                                    Icon(
+                                        imageVector = Icons.Default.PictureAsPdf,
+                                        contentDescription = "Exportar PDF",
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
                             val pendingCount = uiState.reminders.count { !it.isCompleted }
                             BadgedBox(
                                 badge = {
@@ -153,9 +178,9 @@ fun DashboardScreenContent(
                         )
 
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.DirectionsCar, contentDescription = "Dashboard") },
+                            icon = { Icon(Icons.Default.Assessment, contentDescription = "Reportes") },
                             selected = true,
-                            onClick = { },
+                            onClick = { exportReport() },
                             colors = navItemColors
                         )
                         uiState.vehicle?.let { vehicle ->

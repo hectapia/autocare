@@ -36,6 +36,9 @@ data class DashboardUiState(
     val reminders: List<com.autocare.data.entity.Reminder> = emptyList(),
     val otherVehiclesWithReminders: List<Vehicle> = emptyList(),
     val fuelEfficiencyPoints: List<FuelEfficiencyPoint> = emptyList(),
+    val fuelLoads: List<com.autocare.data.entity.FuelLoad> = emptyList(),
+    val maintenances: List<com.autocare.data.entity.Maintenance> = emptyList(),
+    val expenses: List<com.autocare.data.entity.Expense> = emptyList(),
     val costBreakdown: CostBreakdownState = CostBreakdownState(0.0, 0.0, 0.0, 0.0),
     val isLoading: Boolean = true
 )
@@ -164,6 +167,9 @@ class DashboardViewModel(
             reminders = reminders,
             otherVehiclesWithReminders = otherVehiclesWithReminders,
             fuelEfficiencyPoints = efficiencyPoints,
+            fuelLoads = fuelLoads,
+            maintenances = maintenances,
+            expenses = expenses,
             costBreakdown = costBreakdown,
             isLoading = false
         )
