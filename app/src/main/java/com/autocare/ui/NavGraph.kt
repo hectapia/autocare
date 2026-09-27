@@ -1,6 +1,6 @@
 package com.autocare.ui
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -73,6 +73,8 @@ fun AutoCareNavGraph(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as AutoCareApplication
+    val userPrefs = app.userPreferences
+    var isProUser by remember { mutableStateOf(userPrefs.isProUser) }
 
     NavHost(
         navController = navController,
@@ -90,6 +92,7 @@ fun AutoCareNavGraph(
             )
             DashboardScreen(
                 viewModel = dashboardViewModel,
+                isProUser = isProUser,
                 onNavigateToAddVehicle = {
                     navController.navigate(Screen.AddVehicle.route)
                 },
@@ -122,6 +125,11 @@ fun AutoCareNavGraph(
                 onThemeChange = onThemeChange,
                 isBiometricSecurityEnabled = isBiometricSecurityEnabled,
                 onBiometricSecurityChange = onBiometricSecurityChange,
+                isProUser = isProUser,
+                onToggleProUser = {
+                    isProUser = it
+                    userPrefs.isProUser = it
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -290,6 +298,7 @@ fun AutoCareNavGraph(
             HistoryScreen(
                 vehicleId = vehicleId,
                 viewModel = historyViewModel,
+                isProUser = isProUser,
                 onNavigateBack = {
                     navController.popBackStack()
                 },

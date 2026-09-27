@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.autocare.ui.theme.AutoCareTheme
+import com.autocare.ui.components.AdBanner
 import com.autocare.data.entity.Vehicle
 import com.autocare.data.entity.FuelLoad
 import com.autocare.data.entity.Maintenance
@@ -37,6 +38,7 @@ import com.autocare.data.entity.Expense
 fun HistoryScreen(
     vehicleId: Int,
     viewModel: HistoryViewModel,
+    isProUser: Boolean,
     onNavigateBack: () -> Unit,
     onEditFuel: (Int) -> Unit,
     onEditMaint: (Int) -> Unit,
@@ -51,6 +53,7 @@ fun HistoryScreen(
     HistoryScreenContent(
         vehicleId = vehicleId,
         fullHistoryState = fullHistoryState,
+        isProUser = isProUser,
         onNavigateBack = onNavigateBack,
         onEditFuel = onEditFuel,
         onEditMaint = onEditMaint,
@@ -182,6 +185,7 @@ fun HistoryScreenPreview() {
                 expenses = expenses,
                 historyItems = items.sortedByDescending { it.date }
             ),
+            isProUser = false,
             onNavigateBack = {},
             onEditFuel = {},
             onEditMaint = {},
@@ -199,6 +203,7 @@ fun HistoryScreenPreview() {
 fun HistoryScreenContent(
     vehicleId: Int,
     fullHistoryState: FullHistoryState,
+    isProUser: Boolean = false,
     onNavigateBack: () -> Unit,
     onEditFuel: (Int) -> Unit,
     onEditMaint: (Int) -> Unit,
@@ -210,6 +215,7 @@ fun HistoryScreenContent(
 ) {
     val uiState = HistoryUiState(fullHistoryState.historyItems)
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showUpsellDialog by remember { mutableStateOf(false) }
     val tabs = listOf("Todo", "Gas", "Mantenimiento", "Gastos")
     val context = LocalContext.current
 
@@ -232,14 +238,18 @@ fun HistoryScreenContent(
                         fullHistoryState.vehicle?.let { vehicle ->
                             IconButton(
                                 onClick = {
-                                    val file = ReportUtils.generateVehicleReport(
-                                        context,
-                                        vehicle,
-                                        fullHistoryState.fuelLoads,
-                                        fullHistoryState.maintenances,
-                                        fullHistoryState.expenses
-                                    )
-                                    file?.let { ReportUtils.shareFile(context, it) }
+                                    if (isProUser) {
+                                        val file = ReportUtils.generateVehicleReport(
+                                            context,
+                                            vehicle,
+                                            fullHistoryState.fuelLoads,
+                                            fullHistoryState.maintenances,
+                                            fullHistoryState.expenses
+                                        )
+                                        file?.let { ReportUtils.shareFile(context, it) }
+                                    } else {
+                                        showUpsellDialog = true
+                                    }
                                 }
                             ) {
                                 Icon(
@@ -278,6 +288,8 @@ fun HistoryScreenContent(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            AdBanner(isProUser = isProUser)
+
             ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 16.dp) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -321,6 +333,24 @@ fun HistoryScreenContent(
                         )
                     }
                 }
+            }
+
+            if (showUpsellDialog) {
+                AlertDialog(
+                    onDismissRequest = { showUpsellDialog = false },
+                    title = { Text("Función Pro") },
+                    text = { Text("La exportación a PDF es una función Pro. ¡Actualiza para desbloquearla y remover anuncios!") },
+                    confirmButton = {
+                        Button(onClick = { showUpsellDialog = false }) {
+                            Text("Ver Planes")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showUpsellDialog = false }) {
+                            Text("Más tarde")
+                        }
+                    }
+                )
             }
         }
     }

@@ -13,12 +13,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import com.google.android.gms.ads.MobileAds
 import com.autocare.ui.AutoCareNavGraph
 import com.autocare.ui.theme.AutoCareTheme
 
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize Mobile Ads SDK
+        MobileAds.initialize(this) {}
 
         val app = application as AutoCareApplication
         val userPrefs = app.userPreferences

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +21,8 @@ fun SettingsScreen(
     onThemeChange: (Boolean) -> Unit,
     isBiometricSecurityEnabled: Boolean,
     onBiometricSecurityChange: (Boolean) -> Unit,
+    isProUser: Boolean,
+    onToggleProUser: (Boolean) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     Scaffold(
@@ -127,6 +130,53 @@ fun SettingsScreen(
                     Switch(
                         checked = isBiometricSecurityEnabled,
                         onCheckedChange = onBiometricSecurityChange,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                            uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                text = "Versión Pro (Simulación)",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = if (isProUser) "Suscripción Activa - Sin anuncios" else "Activar para remover anuncios y desbloquear PDF",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = isProUser,
+                        onCheckedChange = onToggleProUser,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.primary,
                             checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
