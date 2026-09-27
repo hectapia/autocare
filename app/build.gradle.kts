@@ -52,6 +52,9 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.coil.compose)
     implementation(libs.androidx.biometric)
+    implementation(libs.play.services.ads)
+    implementation(libs.billing.ktx)
+    implementation(libs.androidx.datastore.preferences)
 
     // Vico Chart Library for Jetpack Compose
     implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.22")

@@ -35,11 +35,13 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.res.Configuration
 import androidx.compose.ui.tooling.preview.Preview
 import com.autocare.ui.theme.AutoCareTheme
+import com.autocare.ui.components.AdBanner
 import com.autocare.util.ReportUtils
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
+    isProUser: Boolean,
     onNavigateToAddVehicle: () -> Unit,
     onNavigateToEditVehicle: (Int) -> Unit,
     onNavigateToAddFuel: (Int) -> Unit,
@@ -52,6 +54,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     DashboardScreenContent(
         uiState = uiState,
+        isProUser = isProUser,
         onNavigateToAddVehicle = onNavigateToAddVehicle,
         onNavigateToEditVehicle = onNavigateToEditVehicle,
         onNavigateToAddFuel = onNavigateToAddFuel,
@@ -68,6 +71,7 @@ fun DashboardScreen(
 @Composable
 fun DashboardScreenContent(
     uiState: DashboardUiState,
+    isProUser: Boolean = false,
     onNavigateToAddVehicle: () -> Unit,
     onNavigateToEditVehicle: (Int) -> Unit,
     onNavigateToAddFuel: (Int) -> Unit,
@@ -80,20 +84,25 @@ fun DashboardScreenContent(
     initialShowVehicleSelector: Boolean = false
 ) {
     var showVehicleSelector by remember { mutableStateOf(initialShowVehicleSelector) }
+    var showUpsellDialog by remember { mutableStateOf(false) }
     var areBarsVisible by remember { mutableStateOf(true) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val context = LocalContext.current
 
     val exportReport = {
-        uiState.vehicle?.let { vehicle ->
-            val file = ReportUtils.generateVehicleReport(
-                context,
-                vehicle,
-                uiState.fuelLoads,
-                uiState.maintenances,
-                uiState.expenses
-            )
-            file?.let { ReportUtils.shareFile(context, it) }
+        if (isProUser) {
+            uiState.vehicle?.let { vehicle ->
+                val file = ReportUtils.generateVehicleReport(
+                    context,
+                    vehicle,
+                    uiState.fuelLoads,
+                    uiState.maintenances,
+                    uiState.expenses
+                )
+                file?.let { ReportUtils.shareFile(context, it) }
+            }
+        } else {
+            showUpsellDialog = true
         }
     }
 
@@ -163,6 +172,7 @@ fun DashboardScreenContent(
                 exit = shrinkVertically()
             ) {
                 Column {
+                    AdBanner(isProUser = isProUser)
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     NavigationBar(
@@ -297,6 +307,24 @@ fun DashboardScreenContent(
                     confirmButton = {
                         TextButton(onClick = { showVehicleSelector = false }) {
                             Text("Cerrar")
+                        }
+                    }
+                )
+            }
+
+            if (showUpsellDialog) {
+                AlertDialog(
+                    onDismissRequest = { showUpsellDialog = false },
+                    title = { Text("Función Pro") },
+                    text = { Text("La exportación a PDF es una función Pro. ¡Actualiza para desbloquearla y remover anuncios!") },
+                    confirmButton = {
+                        Button(onClick = { showUpsellDialog = false }) {
+                            Text("Ver Planes")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showUpsellDialog = false }) {
+                            Text("Más tarde")
                         }
                     }
                 )

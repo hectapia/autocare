@@ -65,6 +65,11 @@ erDiagram
 
 - **Seguridad Biométrica**: Acceso protegido mediante huella dactilar o credenciales del dispositivo. Configurable desde la pantalla de Ajustes (activar para requerir autenticación, desactivar para acceso directo).
 - **Gestión de Vehículos**: Soporte para múltiples vehículos con registro de marca, modelo, año y kilometraje actual. Incluye un selector intuitivo con resaltado del vehículo activo.
+- **Monetización y Versión Pro**:
+    - **Integración con AdMob**: Los usuarios de la versión gratuita ven anuncios de banner no intrusivos en el Dashboard e Historial.
+    - **Simulación de Upgrade Pro**: Opción en Ajustes para alternar entre el modo gratuito y Pro.
+    - **Funciones Premium**: El modo Pro elimina la publicidad y desbloquea la **Generación de Reportes PDF** profesionales.
+    - **Diseño Anti-Jumps**: Espacios reservados para anuncios que evitan saltos bruscos en la interfaz al cargar la publicidad.
 - **Sistema de Recordatorios Inteligentes**:
     - Alertas basadas en **Kilometraje** (ej. próximo cambio de aceite).
     - Alertas basadas en **Tiempo/Fecha** (ej. vencimiento de seguro o revisión técnica).
