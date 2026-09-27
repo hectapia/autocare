@@ -283,7 +283,8 @@ fun AutoCareNavGraph(
                     app.fuelLoadRepository,
                     app.maintenanceRepository,
                     app.expenseRepository,
-                    app.reminderRepository
+                    app.reminderRepository,
+                    app.vehicleRepository
                 )
             )
             HistoryScreen(

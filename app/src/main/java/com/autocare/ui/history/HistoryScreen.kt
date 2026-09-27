@@ -12,16 +12,25 @@ import androidx.compose.material.icons.filled.EvStation
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.autocare.util.ReportUtils
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.tooling.preview.Preview
+import com.autocare.ui.theme.AutoCareTheme
+import com.autocare.data.entity.Vehicle
+import com.autocare.data.entity.FuelLoad
+import com.autocare.data.entity.Maintenance
+import com.autocare.data.entity.Expense
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,100 +46,20 @@ fun HistoryScreen(
     onAddExp: (Int) -> Unit,
     onEditReminder: (Int) -> Unit
 ) {
-    val uiState by viewModel.getHistory(vehicleId).collectAsState(initial = HistoryUiState())
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Todo", "Gas", "Mantenimiento", "Gastos")
-
-    Scaffold(
-        topBar = {
-            Column {
-                TopAppBar(
-                    title = { Text("Historial") },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                        }
-                    }
-                )
-                HorizontalDivider(
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    when (selectedTab) {
-                        1 -> onAddFuel(vehicleId)
-                        2 -> onAddMaint(vehicleId)
-                        3 -> onAddExp(vehicleId)
-                        else -> onAddFuel(vehicleId) // Default to fuel
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Agregar Registro"
-                )
-            }
-        }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 16.dp) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = { Text(title) }
-                    )
-                }
-            }
-
-            val filteredList = when (selectedTab) {
-                1 -> uiState.items.filter { it is HistoryItem.Fuel }
-                2 -> uiState.items.filter { it is HistoryItem.Maint }
-                3 -> uiState.items.filter { it is HistoryItem.Exp }
-                else -> uiState.items
-            }
-
-            if (filteredList.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No hay registros aún", color = MaterialTheme.colorScheme.outline)
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(filteredList) { item ->
-                        HistoryCard(
-                            item = item,
-                            onClick = {
-                                when (item) {
-                                    is HistoryItem.Fuel -> onEditFuel(item.data.id)
-                                    is HistoryItem.Maint -> onEditMaint(item.data.id)
-                                    is HistoryItem.Exp -> onEditExp(item.data.id)
-                                }
-                            },
-                            onReminderClick = { reminderId ->
-                                onEditReminder(reminderId)
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
+    val fullHistoryState by viewModel.getFullHistory(vehicleId).collectAsState(initial = FullHistoryState())
+    
+    HistoryScreenContent(
+        vehicleId = vehicleId,
+        fullHistoryState = fullHistoryState,
+        onNavigateBack = onNavigateBack,
+        onEditFuel = onEditFuel,
+        onEditMaint = onEditMaint,
+        onEditExp = onEditExp,
+        onAddFuel = onAddFuel,
+        onAddMaint = onAddMaint,
+        onAddExp = onAddExp,
+        onEditReminder = onEditReminder
+    )
 }
 
 data class HistoryDisplayData(
@@ -209,6 +138,190 @@ fun HistoryCard(
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Text(data.amount, style = MaterialTheme.typography.titleMedium, color = data.color, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HistoryScreenPreview() {
+    val sampleVehicle = Vehicle(
+        id = 1,
+        brand = "Toyota",
+        model = "Corolla",
+        year = 2022,
+        plate = "ABC-1234",
+        currentKm = 15000
+    )
+
+    val fuelLoads = listOf(
+        FuelLoad(1, 1, 40.0, 60.0, 15000, System.currentTimeMillis()),
+        FuelLoad(2, 1, 38.0, 55.0, 14500, System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L)
+    )
+
+    val maintenances = listOf(
+        Maintenance(1, 1, "Cambio de Aceite", System.currentTimeMillis(), 15000, 80.0, "Filtro y aceite sintético")
+    )
+
+    val expenses = listOf(
+        Expense(1, 1, "Seguro", 150.0, System.currentTimeMillis() - 2 * 24 * 60 * 60 * 1000L, "Cuota mensual")
+    )
+
+    val items = mutableListOf<HistoryItem>()
+    items.addAll(fuelLoads.map { HistoryItem.Fuel(it) })
+    items.addAll(maintenances.map { HistoryItem.Maint(it) })
+    items.addAll(expenses.map { HistoryItem.Exp(it) })
+
+    AutoCareTheme {
+        HistoryScreenContent(
+            vehicleId = 1,
+            fullHistoryState = FullHistoryState(
+                vehicle = sampleVehicle,
+                fuelLoads = fuelLoads,
+                maintenances = maintenances,
+                expenses = expenses,
+                historyItems = items.sortedByDescending { it.date }
+            ),
+            onNavigateBack = {},
+            onEditFuel = {},
+            onEditMaint = {},
+            onEditExp = {},
+            onAddFuel = {},
+            onAddMaint = {},
+            onAddExp = {},
+            onEditReminder = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HistoryScreenContent(
+    vehicleId: Int,
+    fullHistoryState: FullHistoryState,
+    onNavigateBack: () -> Unit,
+    onEditFuel: (Int) -> Unit,
+    onEditMaint: (Int) -> Unit,
+    onEditExp: (Int) -> Unit,
+    onAddFuel: (Int) -> Unit,
+    onAddMaint: (Int) -> Unit,
+    onAddExp: (Int) -> Unit,
+    onEditReminder: (Int) -> Unit
+) {
+    val uiState = HistoryUiState(fullHistoryState.historyItems)
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Todo", "Gas", "Mantenimiento", "Gastos")
+    val context = LocalContext.current
+
+    Scaffold(
+        topBar = {
+            Column {
+                TopAppBar(
+                    title = { Text("Historial") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        }
+                    },
+                    actions = {
+                        fullHistoryState.vehicle?.let { vehicle ->
+                            IconButton(
+                                onClick = {
+                                    val file = ReportUtils.generateVehicleReport(
+                                        context,
+                                        vehicle,
+                                        fullHistoryState.fuelLoads,
+                                        fullHistoryState.maintenances,
+                                        fullHistoryState.expenses
+                                    )
+                                    file?.let { ReportUtils.shareFile(context, it) }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PictureAsPdf,
+                                    contentDescription = "Exportar PDF"
+                                )
+                            }
+                        }
+                    }
+                )
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    when (selectedTab) {
+                        1 -> onAddFuel(vehicleId)
+                        2 -> onAddMaint(vehicleId)
+                        3 -> onAddExp(vehicleId)
+                        else -> onAddFuel(vehicleId)
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Agregar Registro"
+                )
+            }
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+            ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 16.dp) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = { Text(title) }
+                    )
+                }
+            }
+
+            val filteredList = when (selectedTab) {
+                1 -> uiState.items.filter { it is HistoryItem.Fuel }
+                2 -> uiState.items.filter { it is HistoryItem.Maint }
+                3 -> uiState.items.filter { it is HistoryItem.Exp }
+                else -> uiState.items
+            }
+
+            if (filteredList.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No hay registros aún", color = MaterialTheme.colorScheme.outline)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(filteredList) { item ->
+                        HistoryCard(
+                            item = item,
+                            onClick = {
+                                when (item) {
+                                    is HistoryItem.Fuel -> onEditFuel(item.data.id)
+                                    is HistoryItem.Maint -> onEditMaint(item.data.id)
+                                    is HistoryItem.Exp -> onEditExp(item.data.id)
+                                }
+                            },
+                            onReminderClick = { reminderId ->
+                                onEditReminder(reminderId)
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }
