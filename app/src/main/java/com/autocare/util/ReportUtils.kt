@@ -2,10 +2,14 @@ package com.autocare.util
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.autocare.R
 import com.autocare.data.entity.Vehicle
 import com.autocare.data.entity.FuelLoad
 import com.autocare.data.entity.Maintenance
@@ -53,9 +57,36 @@ object ReportUtils {
         var canvas = page.canvas
         var y = 60f
 
-        // Header Section
-        canvas.drawText("AutoCare", 50f, y, titlePaint)
-        canvas.drawText("Reporte de Historial de Servicio", 50f, y + 25f, subTextPaint)
+        // Header Section with Logo
+        val logoBitmap = try {
+            val drawable = ContextCompat.getDrawable(context, R.drawable.ic_app_icon_content)
+            if (drawable != null) {
+                val bitmap = Bitmap.createBitmap(
+                    drawable.intrinsicWidth.takeIf { it > 0 } ?: 100,
+                    drawable.intrinsicHeight.takeIf { it > 0 } ?: 100,
+                    Bitmap.Config.ARGB_8888
+                )
+                val canvasBitmap = Canvas(bitmap)
+                drawable.setBounds(0, 0, canvasBitmap.width, canvasBitmap.height)
+                drawable.draw(canvasBitmap)
+                bitmap
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+
+        val logoWidth = 40f
+        val logoHeight = 40f
+        if (logoBitmap != null) {
+            val scaledLogo = Bitmap.createScaledBitmap(logoBitmap, logoWidth.toInt(), logoHeight.toInt(), true)
+            canvas.drawBitmap(scaledLogo, 50f, y - 22f, null)
+        }
+
+        val textStartX = if (logoBitmap != null) 100f else 50f
+        canvas.drawText("AutoCare", textStartX, y, titlePaint)
+        canvas.drawText("Reporte de Historial de Servicio", textStartX, y + 25f, Paint(textPaint).apply { isFakeBoldText = true })
         
         val now = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
         canvas.drawText("Generado el: $now", 400f, y, subTextPaint)
@@ -65,7 +96,7 @@ object ReportUtils {
         y += 30f
 
         // Vehicle Info Section
-        canvas.drawText("Información del Vehículo", 50f, y, subTextPaint)
+        canvas.drawText("Información del Vehículo", 50f, y, Paint(textPaint).apply { isFakeBoldText = true })
         y += 30f
         
         canvas.drawRect(50f, y - 5f, 545f, y + 70f, Paint().apply { color = Color.rgb(245, 245, 245); style = Paint.Style.FILL })
@@ -80,7 +111,7 @@ object ReportUtils {
         y += 50f
         
         // Operational Summary Section
-        canvas.drawText("Resumen de Operación", 50f, y, subTextPaint)
+        canvas.drawText("Resumen de Operación", 50f, y, Paint(textPaint).apply { isFakeBoldText = true })
         y += 30f
 
         val totalFuel = fuelLoads.sumOf { it.totalCost }
@@ -92,26 +123,26 @@ object ReportUtils {
         val avgConsumption = if (liters > 0) (fuelLoads.maxOfOrNull { it.odometer }?.minus(fuelLoads.minOfOrNull { it.odometer } ?: 0) ?: 0).toDouble() / liters else 0.0
 
         canvas.drawText("Gasto en Combustible:", 65f, y, textPaint)
-        canvas.drawText("$${String.format("%.2f", totalFuel)}", 400f, y, textPaint)
+        canvas.drawText("$${String.format("%,.2f", totalFuel)}", 400f, y, textPaint)
         y += 20f
         canvas.drawText("Gasto en Mantenimiento:", 65f, y, textPaint)
-        canvas.drawText("$${String.format("%.2f", totalMaint)}", 400f, y, textPaint)
+        canvas.drawText("$${String.format("%,.2f", totalMaint)}", 400f, y, textPaint)
         y += 20f
         canvas.drawText("Otros Gastos:", 65f, y, textPaint)
-        canvas.drawText("$${String.format("%.2f", totalExp)}", 400f, y, textPaint)
+        canvas.drawText("$${String.format("%,.2f", totalExp)}", 400f, y, textPaint)
         y += 20f
         canvas.drawLine(65f, y, 545f, y, linePaint)
         y += 25f
         canvas.drawText("Total Acumulado:", 65f, y, Paint(textPaint).apply { isFakeBoldText = true })
-        canvas.drawText("$${String.format("%.2f", total)}", 400f, y, Paint(textPaint).apply { isFakeBoldText = true })
+        canvas.drawText("$${String.format("%,.2f", total)}", 400f, y, Paint(textPaint).apply { isFakeBoldText = true })
         
         y += 30f
-        canvas.drawText("Eficiencia Promedio: ${String.format("%.2f", avgConsumption)} km/L", 65f, y, subTextPaint)
+        canvas.drawText("Eficiencia Promedio: ${String.format("%,.2f", avgConsumption)} km/L", 65f, y, Paint(textPaint).apply { isFakeBoldText = true })
         
         y += 50f
 
         // Maintenance Log Section
-        canvas.drawText("Historial de Mantenimiento", 50f, y, subTextPaint)
+        canvas.drawText("Historial de Mantenimiento", 50f, y, Paint(textPaint).apply { isFakeBoldText = true })
         y += 25f
         canvas.drawLine(50f, y, 545f, y, Paint(linePaint).apply { strokeWidth = 2f; color = Color.BLACK })
         y += 20f
@@ -132,7 +163,7 @@ object ReportUtils {
             val dateStr = dateFormat.format(Date(maint.date))
             canvas.drawText(dateStr, 50f, y, textPaint)
             canvas.drawText(maint.type, 150f, y, Paint(textPaint).apply { isFakeBoldText = true })
-            canvas.drawText("$${String.format("%.2f", maint.cost)}", 450f, y, textPaint)
+            canvas.drawText("$${String.format("%,.2f", maint.cost)}", 450f, y, textPaint)
             y += 15f
             canvas.drawText("${String.format("%,d", maint.km)} km - ${maint.notes}", 150f, y, subTextPaint)
             y += 10f
