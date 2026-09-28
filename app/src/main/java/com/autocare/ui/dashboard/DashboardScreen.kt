@@ -28,6 +28,7 @@ import com.autocare.ui.analytics.FuelEfficiencyChart
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.animation.AnimatedVisibility
+import kotlinx.coroutines.launch
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.ui.platform.LocalConfiguration
@@ -37,6 +38,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.autocare.ui.theme.AutoCareTheme
 import com.autocare.ui.components.AdBanner
 import com.autocare.util.ReportUtils
+import com.autocare.util.VehicleReportData
+import kotlin.math.abs
 
 @Composable
 fun DashboardScreen(
@@ -63,7 +66,8 @@ fun DashboardScreen(
         onNavigateToHistory = onNavigateToHistory,
         onNavigateToSettings = onNavigateToSettings,
         onNavigateToEditReminder = onNavigateToEditReminder,
-        onSelectVehicle = { viewModel.selectVehicle(it) }
+        onSelectVehicle = { viewModel.selectVehicle(it) },
+        onGenerateAllVehiclesReport = { viewModel.generateAllVehiclesReportData() }
     )
 }
 
@@ -81,26 +85,20 @@ fun DashboardScreenContent(
     onNavigateToSettings: () -> Unit,
     onNavigateToEditReminder: (Int) -> Unit,
     onSelectVehicle: (Int) -> Unit,
+    onGenerateAllVehiclesReport: suspend () -> List<VehicleReportData> = { emptyList() },
     initialShowVehicleSelector: Boolean = false
 ) {
     var showVehicleSelector by remember { mutableStateOf(initialShowVehicleSelector) }
     var showUpsellDialog by remember { mutableStateOf(false) }
+    var showExportDialog by remember { mutableStateOf(false) }
     var areBarsVisible by remember { mutableStateOf(true) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val exportReport = {
         if (isProUser) {
-            uiState.vehicle?.let { vehicle ->
-                val file = ReportUtils.generateVehicleReport(
-                    context,
-                    vehicle,
-                    uiState.fuelLoads,
-                    uiState.maintenances,
-                    uiState.expenses
-                )
-                file?.let { ReportUtils.shareFile(context, it) }
-            }
+            showExportDialog = true
         } else {
             showUpsellDialog = true
         }
@@ -320,6 +318,88 @@ fun DashboardScreenContent(
                     }
                 )
             }
+
+            if (showExportDialog) {
+                var selectedOption by remember { mutableIntStateOf(0) }
+                val currentVehicle = uiState.vehicle
+                AlertDialog(
+                    onDismissRequest = { showExportDialog = false },
+                    title = { Text("Exportar Reporte PDF") },
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    text = {
+                        Column {
+                            Text(
+                                text = "Selecciona los vehículos que deseas incluir en el reporte:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            currentVehicle?.let { v ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { selectedOption = 0 }
+                                        .padding(vertical = 8.dp)
+                                ) {
+                                    RadioButton(
+                                        selected = selectedOption == 0,
+                                        onClick = { selectedOption = 0 }
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Vehículo actual (${v.brand} ${v.model})")
+                                }
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { selectedOption = 1 }
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                RadioButton(
+                                    selected = selectedOption == 1,
+                                    onClick = { selectedOption = 1 }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Todos los vehículos (${uiState.allVehicles.size} registrados)")
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showExportDialog = false
+                                if (selectedOption == 0) {
+                                    currentVehicle?.let { v ->
+                                        val file = ReportUtils.generateVehicleReport(
+                                            context,
+                                            v,
+                                            uiState.fuelLoads,
+                                            uiState.maintenances,
+                                            uiState.expenses,
+                                            uiState.reminders
+                                        )
+                                        file?.let { ReportUtils.shareFile(context, it) }
+                                    }
+                                } else {
+                                    coroutineScope.launch {
+                                        val dataList = onGenerateAllVehiclesReport()
+                                        val file = ReportUtils.generateAllVehiclesReport(context, dataList)
+                                        file?.let { ReportUtils.shareFile(context, it) }
+                                    }
+                                }
+                            }
+                        ) {
+                            Text("Generar PDF")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showExportDialog = false }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -432,7 +512,7 @@ fun DashboardContent(
                     )
                     Text(text = "Placa: ${vehicle.plate}", style = MaterialTheme.typography.bodyMedium)
                     Text(
-                        text = "${String.format("%,d", vehicle.currentKm)} km",
+                        text = "${String.format(Locale.US, "%,d", vehicle.currentKm)} km",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.SemiBold
@@ -444,19 +524,19 @@ fun DashboardContent(
         // Stats Column (Apiladas)
         StatCard(
             title = "Rendimiento de Combustible",
-            value = if (fuelPerformance > 0.0) "${String.format("%.2f", fuelPerformance)} km/L" else "N/D",
+            value = if (fuelPerformance > 0.0) "${String.format(Locale.US, "%,.2f", fuelPerformance)} km/L" else "N/D",
             icon = Icons.Default.EvStation,
             modifier = Modifier.fillMaxWidth()
         )
         StatCard(
             title = "Gasto Mensual",
-            value = "$${String.format("%.2f", monthlyExpense)}",
+            value = "$${String.format(Locale.US, "%,.2f", monthlyExpense)}",
             icon = Icons.Default.Payments,
             modifier = Modifier.fillMaxWidth()
         )
         StatCard(
             title = "Próximo Mantenimiento",
-            value = nextOilChange?.let { if (it > 0) "en ${it} km" else "¡YA!" } ?: "N/D",
+            value = nextOilChange?.let { if (it > 0) "en ${String.format(Locale.US, "%,d", it)} km" else "¡YA!" } ?: "N/D",
             icon = Icons.Default.Build,
             valueColor = if ((nextOilChange ?: 1000) < 500) Color.Red else MaterialTheme.colorScheme.secondary,
             modifier = Modifier.fillMaxWidth()
@@ -558,9 +638,10 @@ fun DashboardContent(
                             reminder.targetKm?.let { target ->
                                 val diff = target - vehicle.currentKm
                                 val color = if (diff <= 500) iconColor else MaterialTheme.colorScheme.onSurfaceVariant
+                                val formattedDiff = String.format(Locale.US, "%,d", abs(diff))
                                 Text(
-                                    text = "Por Kilometraje: ${String.format("%,d", target)} km " + 
-                                           (if (diff <= 0) "(Vencido hace ${-diff} km)" else "(Faltan ${diff} km)"),
+                                    text = "Por Kilometraje: ${String.format(Locale.US, "%,d", target)} km " + 
+                                           (if (diff <= 0) "(Vencido hace $formattedDiff km)" else "(Faltan $formattedDiff km)"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = color
                                 )

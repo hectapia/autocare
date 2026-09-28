@@ -82,21 +82,21 @@ fun HistoryCard(
     val data = when (item) {
         is HistoryItem.Fuel -> HistoryDisplayData(
             "Carga de Combustible",
-            "$${String.format("%.2f", item.data.totalCost)}",
+            "$${String.format(Locale.US, "%,.2f", item.data.totalCost)}",
             item.data.date,
             Icons.Default.EvStation,
             MaterialTheme.colorScheme.primary
         )
         is HistoryItem.Maint -> HistoryDisplayData(
             item.data.type,
-            "$${String.format("%.2f", item.data.cost)}",
+            "$${String.format(Locale.US, "%,.2f", item.data.cost)}",
             item.data.date,
             Icons.Default.Build,
             MaterialTheme.colorScheme.secondary
         )
         is HistoryItem.Exp -> HistoryDisplayData(
             item.data.category,
-            "$${String.format("%.2f", item.data.amount)}",
+            "$${String.format(Locale.US, "%,.2f", item.data.amount)}",
             item.data.date,
             Icons.Default.Receipt,
             MaterialTheme.colorScheme.tertiary
@@ -244,7 +244,8 @@ fun HistoryScreenContent(
                                             vehicle,
                                             fullHistoryState.fuelLoads,
                                             fullHistoryState.maintenances,
-                                            fullHistoryState.expenses
+                                            fullHistoryState.expenses,
+                                            fullHistoryState.reminders
                                         )
                                         file?.let { ReportUtils.shareFile(context, it) }
                                     } else {

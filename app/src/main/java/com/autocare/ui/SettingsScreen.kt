@@ -68,7 +68,10 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             if (darkTheme) Icons.Default.Brightness4 else Icons.Default.Brightness7,
                             contentDescription = null,
@@ -80,6 +83,7 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Switch(
                         checked = darkTheme,
                         onCheckedChange = onThemeChange,
@@ -108,7 +112,10 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             Icons.Default.Fingerprint,
                             contentDescription = null,
@@ -127,6 +134,7 @@ fun SettingsScreen(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Switch(
                         checked = isBiometricSecurityEnabled,
                         onCheckedChange = onBiometricSecurityChange,
@@ -155,7 +163,10 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             Icons.Default.Star,
                             contentDescription = null,
@@ -174,6 +185,7 @@ fun SettingsScreen(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Switch(
                         checked = isProUser,
                         onCheckedChange = onToggleProUser,

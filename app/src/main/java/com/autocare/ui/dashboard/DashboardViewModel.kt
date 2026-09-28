@@ -9,6 +9,7 @@ import com.autocare.data.repository.FuelLoadRepository
 import com.autocare.data.repository.MaintenanceRepository
 import com.autocare.data.repository.ReminderRepository
 import com.autocare.data.repository.VehicleRepository
+import com.autocare.util.VehicleReportData
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -61,6 +62,23 @@ class DashboardViewModel(
 
     fun selectVehicle(vehicleId: Int) {
         _selectedVehicleId.value = vehicleId
+    }
+
+    suspend fun generateAllVehiclesReportData(): List<VehicleReportData> {
+        val vehicles = vehicleRepository.allVehicles.first()
+        return vehicles.map { v ->
+            val fuelLoads = fuelLoadRepository.getFuelLoadsForVehicle(v.id).first()
+            val expenses = expenseRepository.getExpensesForVehicle(v.id).first()
+            val maintenances = maintenanceRepository.getMaintenancesForVehicle(v.id).first()
+            val reminders = reminderRepository.getActiveReminders(v.id).first()
+            VehicleReportData(
+                vehicle = v,
+                fuelLoads = fuelLoads,
+                maintenances = maintenances,
+                expenses = expenses,
+                reminders = reminders
+            )
+        }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)

@@ -2,6 +2,7 @@ package com.autocare.ui.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.autocare.data.entity.Reminder
 import com.autocare.data.repository.ExpenseRepository
 import com.autocare.data.repository.FuelLoadRepository
 import com.autocare.data.repository.MaintenanceRepository
@@ -16,6 +17,7 @@ data class FullHistoryState(
     val fuelLoads: List<com.autocare.data.entity.FuelLoad> = emptyList(),
     val maintenances: List<com.autocare.data.entity.Maintenance> = emptyList(),
     val expenses: List<com.autocare.data.entity.Expense> = emptyList(),
+    val reminders: List<Reminder> = emptyList(),
     val historyItems: List<HistoryItem> = emptyList()
 )
 
@@ -55,6 +57,7 @@ class HistoryViewModel(
                 fuelLoads = fuel,
                 maintenances = maint,
                 expenses = exp,
+                reminders = reminders,
                 historyItems = items.sortedByDescending { it.date }
             )
         }
