@@ -36,7 +36,7 @@ object ReportUtils {
             color = Color.rgb(0, 102, 204) // Professional Blue
         }
         val textPaint = Paint().apply {
-            textSize = 12f
+            textSize = 14f
             color = Color.BLACK
         }
         val subTextPaint = Paint().apply {
@@ -54,8 +54,8 @@ object ReportUtils {
         var y = 60f
 
         // Header Section
-        canvas.drawText("AUTOCARE", 50f, y, titlePaint)
-        canvas.drawText("REPORTE DE HISTORIAL DE SERVICIO", 50f, y + 25f, subTextPaint)
+        canvas.drawText("AutoCare", 50f, y, titlePaint)
+        canvas.drawText("Reporte de Historial de Servicio", 50f, y + 25f, subTextPaint)
         
         val now = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
         canvas.drawText("Generado el: $now", 400f, y, subTextPaint)
@@ -65,7 +65,7 @@ object ReportUtils {
         y += 30f
 
         // Vehicle Info Section
-        canvas.drawText("INFORMACIÓN DEL VEHÍCULO", 50f, y, headerPaint)
+        canvas.drawText("Información del Vehículo", 50f, y, subTextPaint)
         y += 30f
         
         canvas.drawRect(50f, y - 5f, 545f, y + 70f, Paint().apply { color = Color.rgb(245, 245, 245); style = Paint.Style.FILL })
@@ -80,7 +80,7 @@ object ReportUtils {
         y += 50f
         
         // Operational Summary Section
-        canvas.drawText("RESUMEN DE OPERACIÓN", 50f, y, headerPaint)
+        canvas.drawText("Resumen de Operación", 50f, y, subTextPaint)
         y += 30f
 
         val totalFuel = fuelLoads.sumOf { it.totalCost }
@@ -102,7 +102,7 @@ object ReportUtils {
         y += 20f
         canvas.drawLine(65f, y, 545f, y, linePaint)
         y += 25f
-        canvas.drawText("TOTAL ACUMULADO:", 65f, y, Paint(textPaint).apply { isFakeBoldText = true })
+        canvas.drawText("Total Acumulado:", 65f, y, Paint(textPaint).apply { isFakeBoldText = true })
         canvas.drawText("$${String.format("%.2f", total)}", 400f, y, Paint(textPaint).apply { isFakeBoldText = true })
         
         y += 30f
@@ -111,7 +111,7 @@ object ReportUtils {
         y += 50f
 
         // Maintenance Log Section
-        canvas.drawText("HISTORIAL DE MANTENIMIENTO", 50f, y, headerPaint)
+        canvas.drawText("Historial de Mantenimiento", 50f, y, subTextPaint)
         y += 25f
         canvas.drawLine(50f, y, 545f, y, Paint(linePaint).apply { strokeWidth = 2f; color = Color.BLACK })
         y += 20f
