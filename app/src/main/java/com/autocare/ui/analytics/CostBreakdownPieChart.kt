@@ -155,7 +155,7 @@ fun LegendItem(
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "$${String.format(Locale.getDefault(), "%.2f", amount)} (${String.format(Locale.getDefault(), "%.1f", percentage)}%)",
+                text = "$${String.format(Locale.US, "%,.2f", amount)} (${String.format(Locale.US, "%.1f", percentage)}%)",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

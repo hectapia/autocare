@@ -70,6 +70,11 @@ erDiagram
     - **Simulación de Upgrade Pro**: Opción en Ajustes para alternar entre el modo gratuito y Pro.
     - **Funciones Premium**: El modo Pro elimina la publicidad y desbloquea la **Generación de Reportes PDF** profesionales.
     - **Diseño Anti-Jumps**: Espacios reservados para anuncios que evitan saltos bruscos en la interfaz al cargar la publicidad.
+- **Generación de Reportes PDF Profesionales**:
+    - **Modos de Exportación**: Diálogo de selección para generar el reporte del **Vehículo actual** o de la **Flotilla completa**.
+    - **Gráficos en Canvas**: Gráfico de tendencia de rendimiento (km/L) y gráfico de desglose de gastos con separador de miles (`$,.2f`).
+    - **Recordatorios Integrados**: Tabla de recordatorios de mantenimiento activos categorizados por severidad (`[CRÍTICO]`, `[PENDIENTE]`, `[PROGRAMADO]`).
+    - **Formato Profesional**: Encabezado con logo (`ic_app_icon_content` / `ic_launcher_foreground_image`) y alineación limpia de marcas temporales de generación sin solapamiento.
 - **Sistema de Recordatorios Inteligentes**:
     - Alertas basadas en **Kilometraje** (ej. próximo cambio de aceite).
     - Alertas basadas en **Tiempo/Fecha** (ej. vencimiento de seguro o revisión técnica).
