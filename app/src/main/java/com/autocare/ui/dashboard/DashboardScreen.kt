@@ -132,15 +132,6 @@ fun DashboardScreenContent(
                             actionIconContentColor = MaterialTheme.colorScheme.onSurface
                         ),
                         actions = {
-                            if (uiState.vehicle != null) {
-                                IconButton(onClick = { exportReport() }) {
-                                    Icon(
-                                        imageVector = Icons.Default.PictureAsPdf,
-                                        contentDescription = "Exportar PDF",
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
                             val pendingCount = uiState.reminders.count { !it.isCompleted }
                             BadgedBox(
                                 badge = {
@@ -188,7 +179,7 @@ fun DashboardScreenContent(
                         )
 
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Assessment, contentDescription = "Reportes") },
+                            icon = { Icon(Icons.Default.PictureAsPdf, contentDescription = "Reportes") },
                             selected = true,
                             onClick = { exportReport() },
                             colors = navItemColors
