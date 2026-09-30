@@ -2,16 +2,21 @@ package com.autocare.ui.reminder
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -96,6 +101,7 @@ fun EditReminderScreen(
     }
 
     reminderState?.let { reminder ->
+        val focusManager = LocalFocusManager.current
         var title by remember { mutableStateOf(reminder.title) }
         var description by remember { mutableStateOf(reminder.description) }
         var targetKm by remember { mutableStateOf(reminder.targetKm?.toString() ?: "") }
@@ -146,6 +152,18 @@ fun EditReminderScreen(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Título") },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    trailingIcon = {
+                        IconButton(onClick = { focusManager.clearFocus() }) {
+                            Icon(Icons.Default.KeyboardHide, contentDescription = "Ocultar teclado")
+                        }
+                    },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -153,15 +171,38 @@ fun EditReminderScreen(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Descripción") },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    trailingIcon = {
+                        IconButton(onClick = { focusManager.clearFocus() }) {
+                            Icon(Icons.Default.KeyboardHide, contentDescription = "Ocultar teclado")
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
 
                 OutlinedTextField(
                     value = targetKm,
-                    onValueChange = { targetKm = it },
+                    onValueChange = { targetKm = it.filter { char -> char.isDigit() } },
                     label = { Text("Kilometraje Objetivo (km)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() }
+                    ),
+                    trailingIcon = {
+                        IconButton(onClick = { focusManager.clearFocus() }) {
+                            Icon(Icons.Default.KeyboardHide, contentDescription = "Ocultar teclado")
+                        }
+                    },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 

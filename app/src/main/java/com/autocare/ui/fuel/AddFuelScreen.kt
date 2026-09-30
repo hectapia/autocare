@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -125,11 +126,14 @@ fun AddFuelScreen(
         ) {
             OutlinedTextField(
                 value = liters,
-                onValueChange = { liters = it },
+                onValueChange = { liters = cleanDecimalInput(it) },
                 label = { Text("Litros") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
                 ),
                 trailingIcon = {
                     IconButton(onClick = { focusManager.clearFocus() }) {
@@ -141,11 +145,14 @@ fun AddFuelScreen(
             )
             OutlinedTextField(
                 value = totalCost,
-                onValueChange = { totalCost = it },
+                onValueChange = { totalCost = cleanDecimalInput(it) },
                 label = { Text("Costo Total") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
                 ),
                 trailingIcon = {
                     IconButton(onClick = { focusManager.clearFocus() }) {
@@ -157,7 +164,7 @@ fun AddFuelScreen(
             )
             OutlinedTextField(
                 value = odometer,
-                onValueChange = { odometer = it },
+                onValueChange = { odometer = it.filter { char -> char.isDigit() } },
                 label = { Text("Kilometraje actual (Odómetro)") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
@@ -244,5 +251,15 @@ fun AddFuelScreen(
                 }
             }
         }
+    }
+}
+
+private fun cleanDecimalInput(input: String): String {
+    val cleaned = input.filter { it.isDigit() || it == '.' || it == ',' }.replace(',', '.')
+    val firstDotIndex = cleaned.indexOf('.')
+    return if (firstDotIndex != -1) {
+        cleaned.substring(0, firstDotIndex + 1) + cleaned.substring(firstDotIndex + 1).replace(".", "")
+    } else {
+        cleaned
     }
 }

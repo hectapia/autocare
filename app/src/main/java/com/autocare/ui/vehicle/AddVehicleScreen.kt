@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -271,6 +272,9 @@ fun AddVehicleScreen(
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
                 ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
                 trailingIcon = {
                     IconButton(onClick = { focusManager.clearFocus() }) {
                         Icon(Icons.Default.KeyboardHide, contentDescription = "Ocultar teclado")
@@ -281,7 +285,7 @@ fun AddVehicleScreen(
             )
             OutlinedTextField(
                 value = km,
-                onValueChange = { km = it },
+                onValueChange = { km = it.filter { char -> char.isDigit() } },
                 label = { Text("Kilometraje Actual") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
