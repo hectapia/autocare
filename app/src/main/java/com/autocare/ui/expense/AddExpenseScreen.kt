@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -131,11 +132,14 @@ fun AddExpenseScreen(
 
             OutlinedTextField(
                 value = amount,
-                onValueChange = { amount = it },
+                onValueChange = { amount = cleanDecimalInput(it) },
                 label = { Text("Monto") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
                 ),
                 trailingIcon = {
                     IconButton(onClick = { focusManager.clearFocus() }) {
@@ -279,5 +283,15 @@ fun ExpenseCategoryDropdown(
                 }
             }
         }
+    }
+}
+
+private fun cleanDecimalInput(input: String): String {
+    val cleaned = input.filter { it.isDigit() || it == '.' || it == ',' }.replace(',', '.')
+    val firstDotIndex = cleaned.indexOf('.')
+    return if (firstDotIndex != -1) {
+        cleaned.substring(0, firstDotIndex + 1) + cleaned.substring(firstDotIndex + 1).replace(".", "")
+    } else {
+        cleaned
     }
 }

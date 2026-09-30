@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -171,11 +172,14 @@ fun AddMaintenanceScreen(
 
             OutlinedTextField(
                 value = km,
-                onValueChange = { km = it },
+                onValueChange = { km = it.filter { char -> char.isDigit() } },
                 label = { Text("Kilometraje") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
                 ),
                 trailingIcon = {
                     IconButton(onClick = { focusManager.clearFocus() }) {
@@ -188,11 +192,14 @@ fun AddMaintenanceScreen(
 
             OutlinedTextField(
                 value = cost,
-                onValueChange = { cost = it },
+                onValueChange = { cost = cleanDecimalInput(it) },
                 label = { Text("Costo Total") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
                 ),
                 trailingIcon = {
                     IconButton(onClick = { focusManager.clearFocus() }) {
@@ -280,9 +287,21 @@ fun AddMaintenanceScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = reminderKm,
-                        onValueChange = { reminderKm = it },
+                        onValueChange = { reminderKm = it.filter { char -> char.isDigit() } },
                         label = { Text("Próximo mantenimiento (km)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { focusManager.clearFocus() }) {
+                                Icon(Icons.Default.KeyboardHide, contentDescription = "Ocultar teclado")
+                            }
+                        },
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
@@ -401,5 +420,15 @@ fun MaintenanceDropdown(
                 }
             }
         }
+    }
+}
+
+private fun cleanDecimalInput(input: String): String {
+    val cleaned = input.filter { it.isDigit() || it == '.' || it == ',' }.replace(',', '.')
+    val firstDotIndex = cleaned.indexOf('.')
+    return if (firstDotIndex != -1) {
+        cleaned.substring(0, firstDotIndex + 1) + cleaned.substring(firstDotIndex + 1).replace(".", "")
+    } else {
+        cleaned
     }
 }
