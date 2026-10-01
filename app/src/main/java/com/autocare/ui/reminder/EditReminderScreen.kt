@@ -257,6 +257,7 @@ fun EditReminderScreen(
                     )
                     DatePickerDialog(
                         onDismissRequest = { showDatePicker = false },
+                        colors = DatePickerDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         confirmButton = {
                             TextButton(onClick = {
                                 targetDate = datePickerState.selectedDateMillis
@@ -271,7 +272,10 @@ fun EditReminderScreen(
                             }
                         }
                     ) {
-                        DatePicker(state = datePickerState)
+                        DatePicker(
+                            state = datePickerState,
+                            colors = DatePickerDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        )
                     }
                 }
             }

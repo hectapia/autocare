@@ -175,6 +175,7 @@ fun AutoCareNavGraph(
             AddFuelScreen(
                 viewModel = fuelViewModel,
                 vehicleId = vehicleId,
+                isProUser = isProUser,
                 onFuelAdded = {
                     navController.popBackStack()
                 },
@@ -196,6 +197,7 @@ fun AutoCareNavGraph(
             AddMaintenanceScreen(
                 viewModel = maintenanceViewModel,
                 vehicleId = vehicleId,
+                isProUser = isProUser,
                 onMaintenanceAdded = {
                     navController.popBackStack()
                 },
@@ -217,6 +219,7 @@ fun AutoCareNavGraph(
             AddExpenseScreen(
                 viewModel = expenseViewModel,
                 vehicleId = vehicleId,
+                isProUser = isProUser,
                 onExpenseAdded = {
                     navController.popBackStack()
                 },
@@ -239,6 +242,7 @@ fun AutoCareNavGraph(
                 viewModel = fuelViewModel,
                 vehicleId = -1, // Not needed for edit if we have fuelId
                 fuelId = fuelId,
+                isProUser = isProUser,
                 onFuelAdded = { navController.popBackStack() },
                 onNavigateBack = { navController.popBackStack() }
             )
@@ -257,6 +261,7 @@ fun AutoCareNavGraph(
                 viewModel = maintenanceViewModel,
                 vehicleId = -1,
                 maintenanceId = maintId,
+                isProUser = isProUser,
                 onMaintenanceAdded = { navController.popBackStack() },
                 onNavigateBack = { navController.popBackStack() }
             )
@@ -275,6 +280,7 @@ fun AutoCareNavGraph(
                 viewModel = expenseViewModel,
                 vehicleId = -1,
                 expenseId = expenseId,
+                isProUser = isProUser,
                 onExpenseAdded = { navController.popBackStack() },
                 onNavigateBack = { navController.popBackStack() }
             )
