@@ -8,6 +8,7 @@ import com.autocare.data.repository.ExpenseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class ExpenseViewModel(
     private val expenseRepository: ExpenseRepository
@@ -32,15 +33,25 @@ class ExpenseViewModel(
         onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
+            val existing = if (id != null && id != 0) expenseRepository.getExpenseById(id) else null
+            val targetVehicleId = when {
+                vehicleId != -1 -> vehicleId
+                existing != null -> existing.vehicleId
+                else -> -1
+            }
+
+            if (targetVehicleId == -1) return@launch
+
             val amountValue = amount.toDoubleOrNull() ?: 0.0
 
             val expense = Expense(
                 id = id ?: 0,
-                vehicleId = vehicleId,
+                vehicleId = targetVehicleId,
                 category = category,
                 amount = amountValue,
                 notes = notes,
-                date = date
+                date = date,
+                uuid = existing?.uuid ?: UUID.randomUUID().toString()
             )
             
             if (id == null || id == 0) {

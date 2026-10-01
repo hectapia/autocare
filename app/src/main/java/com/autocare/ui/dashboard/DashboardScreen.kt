@@ -38,6 +38,9 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.ui.tooling.preview.Preview
+import com.autocare.data.entity.Expense
+import com.autocare.data.entity.FuelLoad
+import com.autocare.data.entity.Maintenance
 import com.autocare.ui.theme.AutoCareTheme
 import com.autocare.ui.components.AdBanner
 import com.autocare.util.ReportUtils
@@ -263,6 +266,9 @@ fun DashboardScreenContent(
                 reminders = uiState.reminders,
                 fuelEfficiencyPoints = uiState.fuelEfficiencyPoints,
                 costBreakdown = uiState.costBreakdown,
+                fuelLoads = uiState.fuelLoads,
+                maintenances = uiState.maintenances,
+                expenses = uiState.expenses,
                 onEditVehicle = { onNavigateToEditVehicle(uiState.vehicle.id) },
                 onEditReminder = onNavigateToEditReminder,
                 otherVehiclesWithReminders = uiState.otherVehiclesWithReminders,
@@ -416,6 +422,9 @@ fun DashboardContent(
     reminders: List<com.autocare.data.entity.Reminder>,
     fuelEfficiencyPoints: List<FuelEfficiencyPoint>,
     costBreakdown: CostBreakdownState,
+    fuelLoads: List<FuelLoad> = emptyList(),
+    maintenances: List<Maintenance> = emptyList(),
+    expenses: List<Expense> = emptyList(),
     onEditVehicle: () -> Unit,
     onEditReminder: (Int) -> Unit,
     otherVehiclesWithReminders: List<Vehicle>,
@@ -524,22 +533,45 @@ fun DashboardContent(
             }
         }
 
+        val lastFuel = fuelLoads.maxByOrNull { it.date }
+        val fuelSubtitle = lastFuel?.let {
+            val dateStr = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date(it.date))
+            val kmStr = String.format(Locale.US, "%,d km", it.odometer)
+            "Última carga: $dateStr  •  $kmStr"
+        }
+
+        val lastExpense = expenses.maxByOrNull { it.date }
+        val expenseSubtitle = lastExpense?.let {
+            val dateStr = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date(it.date))
+            "Último gasto: $dateStr"
+        }
+
+        val lastMaint = maintenances.maxByOrNull { it.date }
+        val maintSubtitle = lastMaint?.let {
+            val dateStr = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date(it.date))
+            val kmStr = String.format(Locale.US, "%,d km", it.km)
+            "Último servicio: $dateStr  •  $kmStr"
+        }
+
         // Stats Column (Apiladas)
         StatCard(
             title = "Rendimiento de Combustible",
             value = if (fuelPerformance > 0.0) "${String.format(Locale.US, "%,.2f", fuelPerformance)} km/L" else "N/D",
+            subtitle = fuelSubtitle,
             icon = Icons.Default.EvStation,
             modifier = Modifier.fillMaxWidth()
         )
         StatCard(
             title = "Gasto Mensual",
             value = "$${String.format(Locale.US, "%,.2f", monthlyExpense)}",
+            subtitle = expenseSubtitle,
             icon = Icons.Default.Payments,
             modifier = Modifier.fillMaxWidth()
         )
         StatCard(
             title = "Próximo Mantenimiento",
             value = nextOilChange?.let { if (it > 0) "en ${String.format(Locale.US, "%,d", it)} km" else "¡YA!" } ?: "N/D",
+            subtitle = maintSubtitle,
             icon = Icons.Default.Build,
             valueColor = if ((nextOilChange ?: 1000) < 500) Color.Red else MaterialTheme.colorScheme.secondary,
             modifier = Modifier.fillMaxWidth()
@@ -547,7 +579,7 @@ fun DashboardContent(
 
         // Analytics Section
         Text(
-            text = "Estadísticas e Insights",
+            text = "Estadísticas",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 8.dp)
@@ -560,12 +592,24 @@ fun DashboardContent(
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Tendencia de Eficiencia (km/L)",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Tendencia de Eficiencia (km/L)",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (fuelEfficiencyPoints.isNotEmpty()) {
+                        val avgEfficiency = fuelEfficiencyPoints.map { it.kmPerLiter }.average()
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Promedio: ${String.format(Locale.US, "%,.2f km/L", avgEfficiency)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
                 FuelEfficiencyChart(points = fuelEfficiencyPoints)
             }
         }
@@ -689,6 +733,7 @@ fun DashboardContent(
 fun StatCard(
     title: String,
     value: String,
+    subtitle: String? = null,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     valueColor: Color = MaterialTheme.colorScheme.primary,
     modifier: Modifier = Modifier
@@ -712,15 +757,23 @@ fun StatCard(
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.labelMedium)
-                Spacer(modifier = Modifier.height(2.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     value,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = valueColor
                 )
+                if (!subtitle.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

@@ -97,14 +97,14 @@ fun HistoryCard(
             "$${String.format(Locale.US, "%,.2f", item.data.cost)}",
             item.data.date,
             Icons.Default.Build,
-            MaterialTheme.colorScheme.secondary
+            MaterialTheme.colorScheme.primary
         )
         is HistoryItem.Exp -> HistoryDisplayData(
             item.data.category,
             "$${String.format(Locale.US, "%,.2f", item.data.amount)}",
             item.data.date,
             Icons.Default.Receipt,
-            MaterialTheme.colorScheme.tertiary
+            MaterialTheme.colorScheme.primary
         )
     }
 
@@ -125,16 +125,34 @@ fun HistoryCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(data.icon, contentDescription = null, tint = data.color)
+            Icon(data.icon, contentDescription = null, tint = data.color, modifier = Modifier.size(28.dp))
             Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text(data.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                Text(dateStr, style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(4.dp))
+                when (item) {
+                    is HistoryItem.Fuel -> {
+                        Text(dateStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            "${String.format(Locale.US, "%,d km", item.data.odometer)}  •  ${String.format(Locale.US, "%,.2f L", item.data.liters)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    is HistoryItem.Maint -> {
+                        Text("$dateStr  •  ${String.format(Locale.US, "%,d km", item.data.km)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    is HistoryItem.Exp -> {
+                        Text(dateStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
             if (item is HistoryItem.Maint && item.reminderId != null) {
                 IconButton(
                     onClick = { onReminderClick(item.reminderId) },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,

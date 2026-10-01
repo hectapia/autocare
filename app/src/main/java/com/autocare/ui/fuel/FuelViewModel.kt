@@ -9,7 +9,7 @@ import com.autocare.data.repository.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.util.Date
+import java.util.UUID
 
 class FuelViewModel(
     private val fuelLoadRepository: FuelLoadRepository,
@@ -35,17 +35,27 @@ class FuelViewModel(
         onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
+            val existing = if (id != null && id != 0) fuelLoadRepository.getFuelLoadById(id) else null
+            val targetVehicleId = when {
+                vehicleId != -1 -> vehicleId
+                existing != null -> existing.vehicleId
+                else -> -1
+            }
+
+            if (targetVehicleId == -1) return@launch
+
             val litersValue = liters.toDoubleOrNull() ?: 0.0
             val costValue = totalCost.toDoubleOrNull() ?: 0.0
             val odoValue = odometer.toIntOrNull() ?: 0
 
             val fuelLoad = FuelLoad(
                 id = id ?: 0,
-                vehicleId = vehicleId,
+                vehicleId = targetVehicleId,
                 liters = litersValue,
                 totalCost = costValue,
                 odometer = odoValue,
-                date = date
+                date = date,
+                uuid = existing?.uuid ?: UUID.randomUUID().toString()
             )
             
             if (id == null || id == 0) {
@@ -55,7 +65,7 @@ class FuelViewModel(
             }
 
             // Optionally update vehicle's current odometer
-            val vehicle = vehicleRepository.getVehicleById(vehicleId)
+            val vehicle = vehicleRepository.getVehicleById(targetVehicleId)
             vehicle?.let {
                 if (odoValue > it.currentKm) {
                     vehicleRepository.update(it.copy(currentKm = odoValue))

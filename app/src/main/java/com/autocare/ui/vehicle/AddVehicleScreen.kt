@@ -1,9 +1,12 @@
 package com.autocare.ui.vehicle
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,6 +29,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.autocare.data.VehicleData
 import kotlinx.coroutines.launch
@@ -69,6 +73,18 @@ fun AddVehicleScreen(
     ) { success ->
         if (success && tempPhotoUri != null) {
             imageUri = tempPhotoUri
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val uri = createTempImageUri(context)
+            tempPhotoUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Se requiere permiso de cámara para tomar fotos del vehículo", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -152,6 +168,7 @@ fun AddVehicleScreen(
                 AlertDialog(
                     onDismissRequest = { showImageSourceDialog = false },
                     title = { Text("Seleccionar Imagen") },
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Row(
@@ -173,9 +190,14 @@ fun AddVehicleScreen(
                                     .fillMaxWidth()
                                     .clickable {
                                         showImageSourceDialog = false
-                                        val uri = createTempImageUri(context)
-                                        tempPhotoUri = uri
-                                        cameraLauncher.launch(uri)
+                                        val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                                        if (hasPermission) {
+                                            val uri = createTempImageUri(context)
+                                            tempPhotoUri = uri
+                                            cameraLauncher.launch(uri)
+                                        } else {
+                                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                        }
                                     }
                                     .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
